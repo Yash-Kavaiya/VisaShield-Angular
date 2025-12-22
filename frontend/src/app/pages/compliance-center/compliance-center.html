@@ -1,0 +1,107 @@
+<div class="compliance-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">Compliance Center</h1>
+            <p class="page-description">Monitor regulatory compliance and audit trails</p>
+        </div>
+        <div class="score-card">
+            <span class="score-label">Overall Score</span>
+            <div class="score-value-wrapper">
+                <span class="score-value">{{ complianceScore() }}%</span>
+                <lucide-icon [img]="icons.check" [size]="24" class="text-emerald-500"></lucide-icon>
+            </div>
+        </div>
+    </div>
+
+    <div class="layout-grid">
+
+        <!-- Left Column: Alerts & Updates -->
+        <div class="left-column">
+
+            <!-- Active Alerts -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <lucide-icon [img]="icons.alert" [size]="18" class="text-amber-500"></lucide-icon>
+                        Active Alerts
+                    </h3>
+                    <span class="badge badge-warning">{{ alerts().length }} New</span>
+                </div>
+                <div class="card-body">
+                    <div class="alerts-list">
+                        @for (alert of alerts(); track alert.id) {
+                        <div class="alert-item">
+                            <div class="alert-icon" [class]="alert.type">
+                                <lucide-icon [img]="alert.type === 'warning' ? icons.alert : icons.file"
+                                    [size]="16"></lucide-icon>
+                            </div>
+                            <div class="alert-content">
+                                <h4 class="alert-title">{{ alert.title }}</h4>
+                                <p class="alert-desc">{{ alert.description }}</p>
+                                <span class="alert-date">{{ alert.date }}</span>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regulatory Updates -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <lucide-icon [img]="icons.file" [size]="18" class="text-blue-500"></lucide-icon>
+                        Regulatory Updates
+                    </h3>
+                </div>
+                <div class="updates-list">
+                    @for (update of regulatoryUpdates(); track update.id) {
+                    <div class="update-item">
+                        <div class="update-header">
+                            <div>
+                                <span class="agency-tag">{{ update.agency }}</span>
+                                <span class="update-title">{{ update.title }}</span>
+                            </div>
+                            <span class="impact-badge" [class]="update.impact.toLowerCase()">{{ update.impact }}
+                                Impact</span>
+                        </div>
+                        <p class="update-summary">{{ update.summary }}</p>
+                        <span class="update-date">Effective: {{ update.date }}</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Audit Log -->
+        <div class="right-column">
+            <div class="card audit-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <lucide-icon [img]="icons.clock" [size]="18" class="text-indigo-500"></lucide-icon>
+                        Recent Audit Logs
+                    </h3>
+                    <button class="btn-link">View All</button>
+                </div>
+                <!-- Remove overflow hidden from card body to allow timeline line to show properly if needed, but here we handle it inside -->
+                <div class="card-body">
+                    <div class="audit-list">
+                        @for (log of recentAudits(); track log.id) {
+                        <div class="audit-item">
+                            <div class="audit-dot" [class]="log.status"></div>
+                            <span class="audit-time">{{ log.time }}</span>
+                            <div class="audit-action">{{ log.action }}</div>
+                            <p class="audit-details">{{ log.details }}</p>
+                            <div class="audit-user">
+                                <div class="user-avatar">{{ log.user.charAt(0) }}</div>
+                                <span class="user-name">{{ log.user }}</span>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,187 @@
+<div class="case-list-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">Case Management</h1>
+            <p class="page-description">Manage and review all immigration petitions</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary">
+                <lucide-icon [img]="icons.download" [size]="18"></lucide-icon>
+                Export
+            </button>
+            <button class="btn btn-primary">
+                <lucide-icon [img]="icons.plus" [size]="18"></lucide-icon>
+                New Petition
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+        <div class="search-box">
+            <lucide-icon [img]="icons.search" [size]="18" class="search-icon"></lucide-icon>
+            <input type="text" class="search-input" placeholder="Search by case number, applicant, or attorney..."
+                [value]="searchQuery()" (input)="updateSearch($event)">
+        </div>
+
+        <div class="filter-actions">
+            <button class="btn btn-ghost" (click)="toggleFilters()">
+                <lucide-icon [img]="icons.sliders" [size]="18"></lucide-icon>
+                Filters
+                @if (statusFilter() !== 'all' || visaTypeFilter() !== 'all') {
+                <span class="filter-badge">{{ (statusFilter() !== 'all' ? 1 : 0) + (visaTypeFilter() !== 'all' ? 1 : 0)
+                    }}</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    <!-- Expanded Filters -->
+    @if (showFilters()) {
+    <div class="expanded-filters">
+        <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <div class="filter-chips">
+                @for (status of statusOptions; track status) {
+                <button class="filter-chip" [class.active]="statusFilter() === status"
+                    (click)="setStatusFilter(status)">
+                    {{ status === 'all' ? 'All Statuses' : status }}
+                </button>
+                }
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label">Visa Type</label>
+            <div class="filter-chips">
+                @for (type of visaTypeOptions; track type) {
+                <button class="filter-chip" [class.active]="visaTypeFilter() === type"
+                    (click)="setVisaTypeFilter(type)">
+                    {{ type === 'all' ? 'All Types' : type }}
+                </button>
+                }
+            </div>
+        </div>
+
+        @if (statusFilter() !== 'all' || visaTypeFilter() !== 'all') {
+        <button class="clear-filters-btn" (click)="clearFilters()">
+            <lucide-icon [img]="icons.x" [size]="14"></lucide-icon>
+            Clear Filters
+        </button>
+        }
+    </div>
+    }
+
+    <!-- Results Summary -->
+    <div class="results-summary">
+        <span class="results-count">{{ filteredCases().length }} cases</span>
+        @if (selectedCases().size > 0) {
+        <span class="selected-count">{{ selectedCases().size }} selected</span>
+        }
+    </div>
+
+    <!-- Cases Table -->
+    <div class="card table-card">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <input type="checkbox" [checked]="selectAll()" (change)="toggleSelectAll()">
+                        </th>
+                        <th>Case Number</th>
+                        <th>Applicant</th>
+                        <th>Visa Type</th>
+                        <th>Status</th>
+                        <th>AI Confidence</th>
+                        <th>Attorney</th>
+                        <th>Filed Date</th>
+                        <th>Last Updated</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (case_ of paginatedCases(); track case_.id) {
+                    <tr [class.selected]="isCaseSelected(case_.id)">
+                        <td class="checkbox-col">
+                            <input type="checkbox" [checked]="isCaseSelected(case_.id)"
+                                (change)="toggleCaseSelection(case_.id)">
+                        </td>
+                        <td>
+                            <div class="case-number-cell">
+                                <span class="priority-indicator" [class]="getPriorityClass(case_.priority)"></span>
+                                <a [routerLink]="'/cases/' + case_.id" class="case-link">
+                                    {{ case_.caseNumber }}
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="applicant-name">{{ case_.applicant }}</span>
+                        </td>
+                        <td>
+                            <span class="badge" [class]="getVisaTypeClass(case_.visaType)">
+                                {{ case_.visaType }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge" [class]="getStatusClass(case_.status)">
+                                {{ case_.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="confidence-cell">
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" [style.width.%]="case_.confidence"
+                                        [style.background-color]="getConfidenceColor(case_.confidence)"></div>
+                                </div>
+                                <span class="confidence-value" [style.color]="getConfidenceColor(case_.confidence)">
+                                    {{ case_.confidence }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td class="attorney-cell">{{ case_.attorney }}</td>
+                        <td class="date-cell">{{ case_.filedDate }}</td>
+                        <td class="updated-cell text-muted">{{ case_.lastUpdated }}</td>
+                        <td class="actions-col">
+                            <div class="row-actions">
+                                <button class="action-btn" title="View Case" [routerLink]="'/cases/' + case_.id">
+                                    <lucide-icon [img]="icons.eye" [size]="16"></lucide-icon>
+                                </button>
+                                <button class="action-btn" title="More Actions">
+                                    <lucide-icon [img]="icons.moreHorizontal" [size]="16"></lucide-icon>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <div class="pagination-info">
+                Showing {{ (currentPage() - 1) * pageSize() + 1 }} to {{ Math.min(currentPage() * pageSize(),
+                filteredCases().length) }} of {{ filteredCases().length }} cases
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+                    <lucide-icon [img]="icons.chevronLeft" [size]="18"></lucide-icon>
+                </button>
+
+                @for (page of [].constructor(totalPages()); track $index) {
+                <button class="pagination-btn page-number" [class.active]="currentPage() === $index + 1"
+                    (click)="goToPage($index + 1)">
+                    {{ $index + 1 }}
+                </button>
+                }
+
+                <button class="pagination-btn" [disabled]="currentPage() === totalPages()"
+                    (click)="goToPage(currentPage() + 1)">
+                    <lucide-icon [img]="icons.chevronRight" [size]="18"></lucide-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

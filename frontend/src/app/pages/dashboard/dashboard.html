@@ -1,0 +1,215 @@
+<div class="dashboard">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">{{ getGreeting() }}, {{ userName }}</h1>
+            <p class="hero-date">{{ formatDate() }}</p>
+            <p class="hero-stat">You've helped process <strong>1,247 cases</strong> this quarter</p>
+        </div>
+        <div class="hero-actions">
+            <button class="btn btn-primary">
+                <lucide-icon [img]="icons.upload" [size]="18"></lucide-icon>
+                Upload Petition
+            </button>
+            <button class="btn btn-secondary">
+                <lucide-icon [img]="icons.refreshCw" [size]="18"></lucide-icon>
+                Refresh
+            </button>
+        </div>
+    </section>
+
+    <!-- Metrics Row -->
+    <section class="metrics-section">
+        <div class="metrics-grid">
+            @for (metric of metrics; track metric.label) {
+            <div class="metric-card" [class]="'metric-' + metric.status">
+                <div class="metric-header">
+                    <span class="metric-label">{{ metric.label }}</span>
+                    @if (metric.status === 'success') {
+                    <span class="status-dot success"></span>
+                    } @else if (metric.status === 'warning') {
+                    <span class="status-dot warning"></span>
+                    } @else if (metric.status === 'danger') {
+                    <span class="status-dot danger"></span>
+                    }
+                </div>
+                <div class="metric-value">{{ metric.value }}</div>
+                <div class="metric-trend" [class]="'trend-' + metric.trend.direction">
+                    <lucide-icon [img]="metric.trend.direction === 'up' ? icons.trendingUp : icons.trendingDown"
+                        [size]="14"></lucide-icon>
+                    <span>{{ metric.trend.value }}%</span>
+                    <span class="trend-label">vs last week</span>
+                </div>
+            </div>
+            }
+        </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <section class="main-grid">
+        <!-- Left Column - Cases Table -->
+        <div class="cases-column">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Active Cases</h2>
+                    <a routerLink="/cases" class="view-all-link">
+                        View All
+                        <lucide-icon [img]="icons.arrowRight" [size]="16"></lucide-icon>
+                    </a>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Case Number</th>
+                                <th>Applicant</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Confidence</th>
+                                <th>Updated</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (case_ of cases; track case_.id) {
+                            <tr>
+                                <td>
+                                    <a [routerLink]="'/cases/' + case_.id" class="case-link">
+                                        {{ case_.caseNumber }}
+                                    </a>
+                                </td>
+                                <td>{{ case_.applicant }}</td>
+                                <td>
+                                    <span class="badge" [class]="getVisaTypeClass(case_.visaType)">
+                                        {{ case_.visaType }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge" [class]="getStatusClass(case_.status)">
+                                        {{ case_.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" [style.width.%]="case_.confidence"
+                                            [style.background-color]="getConfidenceColor(case_.confidence)"></div>
+                                    </div>
+                                    <span class="confidence-value">{{ case_.confidence }}%</span>
+                                </td>
+                                <td class="text-muted">{{ case_.updated }}</td>
+                                <td>
+                                    <button class="btn-icon" title="More actions">
+                                        <lucide-icon [img]="icons.moreHorizontal" [size]="16"></lucide-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Widgets -->
+        <div class="widgets-column">
+            <!-- AI Processing Queue -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">AI Processing Queue</h3>
+                    <span class="queue-count">{{ processingQueue.length }} active</span>
+                </div>
+                <div class="processing-list">
+                    @for (item of processingQueue; track item.caseId) {
+                    <div class="processing-item">
+                        <div class="processing-info">
+                            <span class="processing-case font-mono">{{ item.caseId }}</span>
+                            <span class="badge" [class]="getVisaTypeClass(item.visaType)">{{ item.visaType }}</span>
+                        </div>
+                        <div class="processing-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" [style.width.%]="item.progress"></div>
+                            </div>
+                            <span class="progress-text">{{ item.progress }}%</span>
+                        </div>
+                        <div class="processing-time">
+                            <lucide-icon [img]="icons.clock" [size]="12"></lucide-icon>
+                            {{ item.elapsed }}
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Recent Alerts -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Alerts</h3>
+                    <a routerLink="/alerts" class="view-all-link">View All</a>
+                </div>
+                <div class="alerts-list">
+                    @for (alert of alerts; track alert.id) {
+                    <div class="alert-item" [class]="'alert-' + alert.type">
+                        <lucide-icon [img]="getAlertIcon(alert.type)" [size]="16" class="alert-icon"></lucide-icon>
+                        <div class="alert-content">
+                            <p class="alert-message">{{ alert.message }}</p>
+                            <span class="alert-time">{{ alert.time }}</span>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Quick Actions</h3>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn btn-primary w-full">
+                        <lucide-icon [img]="icons.upload" [size]="18"></lucide-icon>
+                        Upload New Petition
+                    </button>
+                    <button class="btn btn-secondary w-full">
+                        <lucide-icon [img]="icons.fileText" [size]="18"></lucide-icon>
+                        Generate Report
+                    </button>
+                    <button class="btn btn-ghost w-full">
+                        <lucide-icon [img]="icons.shieldCheck" [size]="18"></lucide-icon>
+                        View Compliance Log
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Weekly Chart Section -->
+    <section class="chart-section">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Weekly Processing Volume</h2>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-dot approved"></span> Approved</span>
+                    <span class="legend-item"><span class="legend-dot denied"></span> Denied</span>
+                    <span class="legend-item"><span class="legend-dot pending"></span> Pending</span>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-bars">
+                    @for (day of weeklyData; track day.day) {
+                    <div class="chart-bar-group">
+                        <div class="bar-stack">
+                            <div class="bar-segment approved" [style.height.%]="(day.approved / getMaxValue()) * 100"
+                                [title]="'Approved: ' + day.approved"></div>
+                            <div class="bar-segment denied" [style.height.%]="(day.denied / getMaxValue()) * 100"
+                                [title]="'Denied: ' + day.denied"></div>
+                            <div class="bar-segment pending" [style.height.%]="(day.pending / getMaxValue()) * 100"
+                                [title]="'Pending: ' + day.pending"></div>
+                        </div>
+                        <span class="bar-label">{{ day.day }}</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

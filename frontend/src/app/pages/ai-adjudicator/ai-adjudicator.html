@@ -1,0 +1,186 @@
+<div class="ai-adjudicator-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-info">
+            <h1 class="page-title">AI Adjudicator</h1>
+            <div class="case-info">
+                <span class="case-number font-mono">{{ currentCase.caseNumber }}</span>
+                <span class="badge badge-h1b">{{ currentCase.visaType }}</span>
+                <span class="applicant-name">{{ currentCase.applicant }}</span>
+            </div>
+        </div>
+        <div class="header-controls">
+            <div class="time-info">
+                <span class="time-label">Elapsed:</span>
+                <span class="time-value">{{ elapsedTime() }}</span>
+                <span class="time-separator">|</span>
+                <span class="time-label">Remaining:</span>
+                <span class="time-value">{{ estimatedRemaining() }}</span>
+            </div>
+            <div class="control-buttons">
+                <button class="btn btn-secondary" (click)="toggleProcessing()">
+                    <lucide-icon [img]="isProcessing() ? icons.pause : icons.play" [size]="18"></lucide-icon>
+                    {{ isProcessing() ? 'Pause' : 'Resume' }}
+                </button>
+                <button class="btn btn-secondary" (click)="skipToSummary()">
+                    <lucide-icon [img]="icons.skipForward" [size]="18"></lucide-icon>
+                    Skip to Summary
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+        <div class="stages-bar">
+            @for (stage of stages; track stage.id) {
+            <div class="stage" [class]="'stage-' + getStageStatus(stage.id)">
+                <div class="stage-indicator">
+                    <lucide-icon [img]="getStageIcon(getStageStatus(stage.id))" [size]="16"></lucide-icon>
+                </div>
+                <span class="stage-name">{{ stage.name }}</span>
+            </div>
+            @if (stage.id < stages.length - 1) { <div class="stage-connector"
+                [class.completed]="stage.id < currentStage()">
+        </div>
+        }
+        }
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Left Side - Document Viewer -->
+    <div class="document-panel">
+        <div class="panel-header">
+            <lucide-icon [img]="icons.fileText" [size]="18"></lucide-icon>
+            <span class="panel-title">{{ currentCase.currentDocument }}</span>
+            <span class="analyzing-badge">
+                <span class="pulse-dot"></span>
+                Analyzing
+            </span>
+        </div>
+        <div class="document-viewer">
+            <div class="document-content" [style.transform]="'scale(' + zoomLevel() / 100 + ')'">
+                <!-- Simulated PDF content with highlights -->
+                <div class="pdf-page">
+                    <div class="form-header">
+                        <div class="form-number">OMB No. 1615-0009</div>
+                        <div class="form-title">Department of Homeland Security<br>U.S. Citizenship and Immigration
+                            Services</div>
+                        <h2>I-129, Petition for a Nonimmigrant Worker</h2>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Part 1. Petitioner Information</h3>
+                        <div class="form-field">
+                            <label>1. Legal Business Name</label>
+                            <div class="field-value highlighted">TechCorp Solutions Inc.</div>
+                        </div>
+                        <div class="form-field">
+                            <label>2. Mailing Address</label>
+                            <div class="field-value">123 Innovation Drive, San Francisco, CA 94105</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Part 2. Information About This Petition</h3>
+                        <div class="form-field">
+                            <label>3. Requested Action</label>
+                            <div class="field-value highlighted">New employment - Initial grant of status</div>
+                        </div>
+                        <div class="form-field">
+                            <label>4. Classification Sought</label>
+                            <div class="field-value highlighted">H-1B Specialty Occupation</div>
+                        </div>
+                    </div>
+
+                    <!-- AI Annotation bubble -->
+                    <div class="ai-annotation">
+                        <div class="annotation-header">AI Interpretation</div>
+                        <div class="annotation-content">
+                            Petitioner is established U.S. company with valid EIN. Classification H-1B confirmed.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="document-controls">
+            <div class="page-nav">
+                <button class="control-btn" (click)="prevPage()" [disabled]="currentPage() === 1">
+                    <lucide-icon [img]="icons.chevronLeft" [size]="18"></lucide-icon>
+                </button>
+                <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+                <button class="control-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages()">
+                    <lucide-icon [img]="icons.chevronRightIcon" [size]="18"></lucide-icon>
+                </button>
+            </div>
+            <div class="zoom-controls">
+                <button class="control-btn" (click)="zoomOut()" [disabled]="zoomLevel() <= 50">
+                    <lucide-icon [img]="icons.zoomOut" [size]="18"></lucide-icon>
+                </button>
+                <span class="zoom-level">{{ zoomLevel() }}%</span>
+                <button class="control-btn" (click)="zoomIn()" [disabled]="zoomLevel() >= 200">
+                    <lucide-icon [img]="icons.zoomIn" [size]="18"></lucide-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side - AI Reasoning Panel -->
+    <div class="reasoning-panel">
+        <div class="panel-header">
+            <lucide-icon [img]="icons.brain" [size]="18"></lucide-icon>
+            <span class="panel-title">Live Analysis</span>
+            @if (isProcessing()) {
+            <span class="processing-indicator">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </span>
+            }
+        </div>
+        <div class="reasoning-content">
+            <div class="reasoning-stream">
+                @for (step of reasoningSteps; track step.id) {
+                <div class="reasoning-step" [class]="'step-' + step.type">
+                    <div class="step-header">
+                        <span class="step-type">{{ getReasoningTypeLabel(step.type) }}</span>
+                        <span class="step-time">{{ step.timestamp }}</span>
+                    </div>
+                    <div class="step-content">{{ step.content }}</div>
+                </div>
+                }
+
+                @if (isProcessing()) {
+                <div class="reasoning-step step-current">
+                    <div class="step-content typing">
+                        Analyzing employer-employee relationship documentation...
+                        <span class="cursor"></span>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Criteria Sidebar -->
+    <div class="criteria-sidebar">
+        <div class="sidebar-header">
+            <h3>Evaluation Criteria</h3>
+        </div>
+        <div class="criteria-list">
+            @for (criterion of criteria; track criterion.id) {
+            <div class="criterion-item" [class]="'criterion-' + criterion.status">
+                <lucide-icon [img]="getCriterionIcon(criterion.status)" [size]="16"
+                    class="criterion-icon"></lucide-icon>
+                <span class="criterion-name">{{ criterion.name }}</span>
+                @if (criterion.confidence) {
+                <span class="criterion-confidence">{{ criterion.confidence }}%</span>
+                }
+            </div>
+            }
+        </div>
+    </div>
+</div>
+</div>

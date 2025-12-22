@@ -1,0 +1,226 @@
+<div class="settings-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">Settings</h1>
+            <p class="page-description">Manage your account preferences and application configuration</p>
+        </div>
+        <button (click)="saveSettings()" class="btn btn-primary">
+            <lucide-icon [img]="icons.save" [size]="18"></lucide-icon>
+            Save Changes
+        </button>
+    </div>
+
+    <div class="settings-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="settings-sidebar">
+            <nav class="settings-nav">
+                <button (click)="setActiveTab('profile')" class="nav-item" [class.active]="activeTab() === 'profile'">
+                    <lucide-icon [img]="icons.user" [size]="18" class="nav-icon"></lucide-icon>
+                    Profile
+                </button>
+                <button (click)="setActiveTab('notifications')" class="nav-item"
+                    [class.active]="activeTab() === 'notifications'">
+                    <lucide-icon [img]="icons.bell" [size]="18" class="nav-icon"></lucide-icon>
+                    Notifications
+                </button>
+                <button (click)="setActiveTab('security')" class="nav-item" [class.active]="activeTab() === 'security'">
+                    <lucide-icon [img]="icons.shield" [size]="18" class="nav-icon"></lucide-icon>
+                    Security
+                </button>
+                <button (click)="setActiveTab('appearance')" class="nav-item"
+                    [class.active]="activeTab() === 'appearance'">
+                    <lucide-icon [img]="icons.monitor" [size]="18" class="nav-icon"></lucide-icon>
+                    Appearance
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="settings-content">
+
+            <!-- Profile Tab -->
+            @if (activeTab() === 'profile') {
+            <div class="settings-section">
+                <h2 class="section-title">Profile Information</h2>
+
+                <div class="profile-header">
+                    <div class="avatar-container">
+                        <lucide-icon [img]="icons.user" [size]="40"></lucide-icon>
+                    </div>
+                    <div class="avatar-actions">
+                        <button class="btn-small">Upload New</button>
+                        <button class="btn-small">Remove</button>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label class="field-label">First Name</label>
+                        <input [(ngModel)]="profile().firstName" type="text" class="field-input">
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">Last Name</label>
+                        <input [(ngModel)]="profile().lastName" type="text" class="field-input">
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">Email Address</label>
+                        <input [(ngModel)]="profile().email" type="email" class="field-input">
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">Phone Number</label>
+                        <input [(ngModel)]="profile().phone" type="tel" class="field-input">
+                    </div>
+                    <div class="form-field full-width">
+                        <label class="field-label">Job Title</label>
+                        <input [(ngModel)]="profile().title" type="text" class="field-input">
+                    </div>
+                    <div class="form-field full-width">
+                        <label class="field-label">Bio</label>
+                        <textarea [(ngModel)]="profile().bio" class="field-textarea"></textarea>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <!-- Notifications Tab -->
+            @if (activeTab() === 'notifications') {
+            <div class="settings-section">
+                <h2 class="section-title">Notification Preferences</h2>
+
+                <div class="section-group">
+                    <h3 class="group-title">Email Notifications</h3>
+                    <div class="toggle-list">
+                        <div class="toggle-item">
+                            <input [(ngModel)]="notifications().emailAlerts" type="checkbox" id="emailAlerts"
+                                class="checkbox-input">
+                            <label for="emailAlerts" class="toggle-content">
+                                <div class="toggle-title">Critical Alerts</div>
+                                <div class="toggle-description">Receive emails for urgent case updates and system
+                                    alerts.</div>
+                            </label>
+                        </div>
+                        <div class="toggle-item">
+                            <input [(ngModel)]="notifications().weeklyDigest" type="checkbox" id="weeklyDigest"
+                                class="checkbox-input">
+                            <label for="weeklyDigest" class="toggle-content">
+                                <div class="toggle-title">Weekly Digest</div>
+                                <div class="toggle-description">Summary of case activities and team performance sent
+                                    every Monday.</div>
+                            </label>
+                        </div>
+                        <div class="toggle-item">
+                            <input [(ngModel)]="notifications().marketingEmails" type="checkbox" id="marketingEmails"
+                                class="checkbox-input">
+                            <label for="marketingEmails" class="toggle-content">
+                                <div class="toggle-title">Product Updates</div>
+                                <div class="toggle-description">News about new features and improvements.</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-group">
+                    <h3 class="group-title">Push Notifications</h3>
+                    <div class="toggle-list">
+                        <div class="toggle-item">
+                            <input [(ngModel)]="notifications().browserPush" type="checkbox" id="browserPush"
+                                class="checkbox-input">
+                            <label for="browserPush" class="toggle-content">
+                                <div class="toggle-title">Browser Notifications</div>
+                                <div class="toggle-description">Get notified whilst you are using the app.</div>
+                            </label>
+                        </div>
+                        <div class="toggle-item">
+                            <input [(ngModel)]="notifications().caseUpdates" type="checkbox" id="caseUpdates"
+                                class="checkbox-input">
+                            <label for="caseUpdates" class="toggle-content">
+                                <div class="toggle-title">Case Status Changes</div>
+                                <div class="toggle-description">Notifications when a case moves between statuses.</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <!-- Security Tab -->
+            @if (activeTab() === 'security') {
+            <div class="settings-section">
+                <h2 class="section-title">Security Settings</h2>
+
+                <div class="section-group">
+                    <h3 class="group-title">Authentication</h3>
+                    <div class="toggle-item">
+                        <div class="toggle-content">
+                            <div class="toggle-title">Two-Factor Authentication</div>
+                            <div class="toggle-description">Add an extra layer of security to your account.</div>
+                        </div>
+                        <!-- Simple toggle Button simulation -->
+                        <button (click)="security().twoFactor = !security().twoFactor"
+                            [style.background]="security().twoFactor ? 'var(--color-success)' : 'var(--color-gray-300)'"
+                            style="width: 44px; height: 24px; border-radius: 99px; position: relative; transition: background 0.2s;">
+                            <span [style.transform]="security().twoFactor ? 'translateX(20px)' : 'translateX(2px)'"
+                                style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 0; transition: transform 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.1);"></span>
+                        </button>
+                    </div>
+                    <div class="toggle-item">
+                        <div class="toggle-content">
+                            <div class="toggle-title">Password</div>
+                            <div class="toggle-description">Last changed on {{ security().lastPasswordChange }}</div>
+                        </div>
+                        <button class="btn-small">Change</button>
+                    </div>
+                </div>
+
+                <div class="section-group">
+                    <h3 class="group-title">Session Management</h3>
+                    <div class="form-field" style="max-width: 300px;">
+                        <label class="field-label">Session Timeout</label>
+                        <select [(ngModel)]="security().sessionTimeout" class="field-select">
+                            <option value="15">15 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="60">1 hour</option>
+                            <option value="120">2 hours</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <!-- Appearance Tab -->
+            @if (activeTab() === 'appearance') {
+            <div class="settings-section">
+                <h2 class="section-title">Appearance</h2>
+
+                <div class="section-group">
+                    <h3 class="group-title">Theme Preference</h3>
+                    <div class="theme-grid">
+                        <div (click)="appearance().theme = 'light'" class="theme-card"
+                            [class.active]="appearance().theme === 'light'">
+                            <div class="theme-icon">
+                                <lucide-icon [img]="icons.sun" [size]="24"></lucide-icon>
+                            </div>
+                            <span class="theme-label">Light</span>
+                        </div>
+                        <div (click)="appearance().theme = 'dark'" class="theme-card"
+                            [class.active]="appearance().theme === 'dark'">
+                            <div class="theme-icon">
+                                <lucide-icon [img]="icons.moon" [size]="24"></lucide-icon>
+                            </div>
+                            <span class="theme-label">Dark</span>
+                        </div>
+                        <div (click)="appearance().theme = 'system'" class="theme-card"
+                            [class.active]="appearance().theme === 'system'">
+                            <div class="theme-icon">
+                                <lucide-icon [img]="icons.monitor" [size]="24"></lucide-icon>
+                            </div>
+                            <span class="theme-label">System</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </main>
+    </div>
+</div>

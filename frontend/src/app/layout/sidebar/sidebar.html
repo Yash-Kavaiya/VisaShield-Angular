@@ -1,0 +1,102 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed()">
+  <!-- Logo Section -->
+  <div class="logo-section">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 4L4 12V20C4 29.2 11.2 37.6 20 40C28.8 37.6 36 29.2 36 20V12L20 4Z" fill="#1E5AA8"/>
+          <path d="M20 8L8 14V20C8 27.2 13.6 33.6 20 36C26.4 33.6 32 27.2 32 20V14L20 8Z" fill="#BF0A30"/>
+          <path d="M20 12L12 16V20C12 25.2 15.6 29.6 20 32C24.4 29.6 28 25.2 28 20V16L20 12Z" fill="white"/>
+          <path d="M18 23L15 20L16.5 18.5L18 20L23.5 14.5L25 16L18 23Z" fill="#0A2647"/>
+        </svg>
+      </div>
+      @if (!isCollapsed()) {
+        <div class="logo-text">
+          <span class="logo-title">VisaGuardian AI</span>
+          <span class="logo-tagline">Immigration Intelligence</span>
+        </div>
+      }
+    </div>
+    <button class="collapse-btn" (click)="toggleCollapse()" [attr.aria-label]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+      <lucide-icon [img]="isCollapsed() ? icons.chevronRight : icons.chevronLeft" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav-section">
+    <ul class="nav-list">
+      @for (item of navItems; track item.label) {
+        <li class="nav-item">
+          @if (item.children) {
+            <!-- Parent with children -->
+            <button 
+              class="nav-link nav-parent"
+              [class.expanded]="isMenuExpanded(item.label)"
+              (click)="toggleMenu(item.label)"
+            >
+              <lucide-icon [img]="item.icon" [size]="20" class="nav-icon"></lucide-icon>
+              @if (!isCollapsed()) {
+                <span class="nav-label">{{ item.label }}</span>
+                <lucide-icon 
+                  [img]="isMenuExpanded(item.label) ? icons.chevronUp : icons.chevronDown" 
+                  [size]="16" 
+                  class="nav-chevron"
+                ></lucide-icon>
+              }
+            </button>
+            @if (!isCollapsed() && isMenuExpanded(item.label)) {
+              <ul class="nav-children">
+                @for (child of item.children; track child.route) {
+                  <li>
+                    <a 
+                      [routerLink]="child.route.split('?')[0]"
+                      [queryParams]="child.route.includes('?') ? {status: child.route.split('=')[1]} : null"
+                      routerLinkActive="active"
+                      class="nav-link nav-child"
+                    >
+                      <span class="nav-label">{{ child.label }}</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          } @else {
+            <!-- Simple link -->
+            <a 
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              class="nav-link"
+            >
+              <lucide-icon [img]="item.icon" [size]="20" class="nav-icon"></lucide-icon>
+              @if (!isCollapsed()) {
+                <span class="nav-label">{{ item.label }}</span>
+              }
+            </a>
+          }
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <!-- User Section -->
+  <div class="user-section">
+    <div class="user-info">
+      <div class="user-avatar">
+        @if (user.avatar) {
+          <img [src]="user.avatar" [alt]="user.name">
+        } @else {
+          <lucide-icon [img]="icons.user" [size]="20"></lucide-icon>
+        }
+      </div>
+      @if (!isCollapsed()) {
+        <div class="user-details">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+        <button class="logout-btn" title="Sign out">
+          <lucide-icon [img]="icons.logout" [size]="18"></lucide-icon>
+        </button>
+      }
+    </div>
+  </div>
+</aside>

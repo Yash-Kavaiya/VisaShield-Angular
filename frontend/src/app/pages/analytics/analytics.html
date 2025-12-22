@@ -1,0 +1,206 @@
+<div class="analytics-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">Analytics Dashboard</h1>
+            <p class="page-description">Processing performance and case metrics</p>
+        </div>
+        <div class="header-actions">
+            <div class="time-range-selector">
+                @for (range of timeRanges; track range.id) {
+                <button class="range-btn" [class.active]="selectedRange() === range.id"
+                    (click)="setTimeRange(range.id)">
+                    {{ range.label }}
+                </button>
+                }
+            </div>
+            <button class="btn btn-secondary">
+                <lucide-icon [img]="icons.download" [size]="18"></lucide-icon>
+                Export Report
+            </button>
+            <button class="btn btn-ghost">
+                <lucide-icon [img]="icons.refreshCw" [size]="18"></lucide-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Key Metrics Row -->
+    <div class="metrics-row">
+        @for (metric of metrics; track metric.label) {
+        <div class="metric-card">
+            <div class="metric-icon-wrapper">
+                <lucide-icon [img]="metric.icon" [size]="20"></lucide-icon>
+            </div>
+            <div class="metric-content">
+                <span class="metric-label">{{ metric.label }}</span>
+                <span class="metric-value">{{ metric.value }}</span>
+                <div class="metric-trend" [class]="'trend-' + metric.trend.direction">
+                    <lucide-icon [img]="metric.trend.direction === 'up' ? icons.trendingUp : icons.trendingDown"
+                        [size]="14"></lucide-icon>
+                    <span>{{ metric.trend.value }}%</span>
+                    <span class="trend-label">{{ metric.subtitle }}</span>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+        <!-- Volume Chart -->
+        <div class="card chart-card wide">
+            <div class="card-header">
+                <h3 class="card-title">Processing Volume Over Time</h3>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-dot approved"></span> Approved</span>
+                    <span class="legend-item"><span class="legend-dot denied"></span> Denied</span>
+                    <span class="legend-item"><span class="legend-dot pending"></span> Pending</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="volume-chart">
+                    @for (day of volumeData; track day.date) {
+                    <div class="chart-bar-group">
+                        <div class="bar-stack">
+                            <div class="bar-segment approved" [style.height.%]="(day.approved / getMaxVolume()) * 100"
+                                [title]="'Approved: ' + day.approved"></div>
+                            <div class="bar-segment denied" [style.height.%]="(day.denied / getMaxVolume()) * 100"
+                                [title]="'Denied: ' + day.denied"></div>
+                            <div class="bar-segment pending" [style.height.%]="(day.pending / getMaxVolume()) * 100"
+                                [title]="'Pending: ' + day.pending"></div>
+                        </div>
+                        <span class="bar-label">{{ day.date.split(' ')[1] }}</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="analytics-grid">
+        <!-- Visa Type Breakdown -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Cases by Visa Type</h3>
+            </div>
+            <div class="card-body">
+                <div class="donut-chart-container">
+                    <div class="donut-chart">
+                        <svg viewBox="0 0 100 100" class="donut-svg">
+                            @for (item of visaTypeBreakdown; track item.type; let i = $index) {
+                            <circle class="donut-segment" cx="50" cy="50" r="40" [attr.stroke]="item.color"
+                                [attr.stroke-dasharray]="item.percentage * 2.51 + ' ' + (251.2 - item.percentage * 2.51)"
+                                [attr.stroke-dashoffset]="getDonutOffset(i)"></circle>
+                            }
+                        </svg>
+                        <div class="donut-center">
+                            <span class="donut-total">{{ getTotalCases() | number }}</span>
+                            <span class="donut-label">Total</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="visa-type-legend">
+                    @for (item of visaTypeBreakdown; track item.type) {
+                    <div class="legend-row">
+                        <span class="legend-color" [style.background-color]="item.color"></span>
+                        <span class="legend-type">{{ item.type }}</span>
+                        <span class="legend-count">{{ item.count | number }}</span>
+                        <span class="legend-percentage">{{ item.percentage }}%</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Breakdown -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Case Status Distribution</h3>
+            </div>
+            <div class="card-body">
+                <div class="status-bars">
+                    @for (status of statusBreakdown; track status.status) {
+                    <div class="status-bar-row">
+                        <div class="status-bar-info">
+                            <span class="status-name">{{ status.status }}</span>
+                            <span class="status-count">{{ status.count | number }}</span>
+                        </div>
+                        <div class="status-bar-container">
+                            <div class="status-bar-fill" [style.width.%]="getStatusPercentage(status.count)"
+                                [style.background-color]="status.color"></div>
+                        </div>
+                        <span class="status-percentage">{{ getStatusPercentage(status.count) }}%</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Time Distribution -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Processing Time Distribution</h3>
+            </div>
+            <div class="card-body">
+                <div class="time-distribution">
+                    @for (item of timeDistribution; track item.label) {
+                    <div class="time-bar-row">
+                        <span class="time-label">{{ item.label }}</span>
+                        <div class="time-bar-container">
+                            <div class="time-bar-fill" [style.width.%]="(item.value / item.max) * 100"
+                                [style.background-color]="item.color"></div>
+                        </div>
+                        <span class="time-count">{{ item.value | number }}</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attorney Performance Table -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Attorney Performance</h3>
+            <span class="card-subtitle">Top performers by cases handled</span>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Attorney</th>
+                        <th>Cases Handled</th>
+                        <th>Approval Rate</th>
+                        <th>Avg Processing Time</th>
+                        <th>Performance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (attorney of attorneyPerformance; track attorney.name; let i = $index) {
+                    <tr>
+                        <td>
+                            <div class="attorney-cell">
+                                <div class="attorney-avatar">{{ getInitials(attorney.name) }}</div>
+                                <span class="attorney-name">{{ attorney.name }}</span>
+                            </div>
+                        </td>
+                        <td class="font-mono">{{ attorney.casesHandled }}</td>
+                        <td>
+                            <span class="approval-rate" [class.high]="attorney.approvalRate >= 90">
+                                {{ attorney.approvalRate }}%
+                            </span>
+                        </td>
+                        <td class="font-mono">{{ attorney.avgTime }}</td>
+                        <td>
+                            <div class="performance-bar">
+                                <div class="performance-fill" [style.width.%]="attorney.approvalRate"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

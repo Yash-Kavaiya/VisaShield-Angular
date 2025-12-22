@@ -1,0 +1,402 @@
+<div class="case-detail-page">
+    <!-- Header -->
+    <div class="case-header">
+        <div class="header-left">
+            <a routerLink="/cases" class="back-link">
+                <lucide-icon [img]="icons.arrowLeft" [size]="18"></lucide-icon>
+                Back to Cases
+            </a>
+            <div class="case-title-row">
+                <h1 class="case-number font-mono">{{ caseData.caseNumber }}</h1>
+                <span class="badge" [class]="getStatusClass(caseData.status)">{{ caseData.status }}</span>
+                <span class="badge badge-h1b">{{ caseData.visaType }}</span>
+            </div>
+            <div class="case-meta">
+                <span>Filed: {{ caseData.filedDate }}</span>
+                <span class="separator">•</span>
+                <span>Priority Date: {{ caseData.priorityDate }}</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary">
+                <lucide-icon [img]="icons.brain" [size]="18"></lucide-icon>
+                Run AI Analysis
+            </button>
+            <button class="btn btn-secondary">
+                <lucide-icon [img]="icons.download" [size]="18"></lucide-icon>
+                Export PDF
+            </button>
+            <button class="btn btn-secondary">
+                <lucide-icon [img]="icons.userPlus" [size]="18"></lucide-icon>
+                Assign Reviewer
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <nav class="tabs-nav">
+        @for (tab of tabs; track tab.id) {
+        <button class="tab-btn" [class.active]="activeTab() === tab.id" (click)="setActiveTab(tab.id)">
+            {{ tab.label }}
+        </button>
+        }
+    </nav>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- OVERVIEW TAB -->
+        @if (activeTab() === 'overview') {
+        <div class="overview-grid">
+            <!-- Left Column -->
+            <div class="overview-left">
+                <!-- Applicant Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Applicant Information</h3>
+                        <button class="toggle-btn" (click)="toggleSensitiveData()">
+                            <lucide-icon [img]="showSensitiveData() ? icons.eyeOff : icons.eye"
+                                [size]="16"></lucide-icon>
+                            {{ showSensitiveData() ? 'Hide' : 'Show' }} Sensitive Data
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.user" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Full Name</span>
+                                <span class="info-value">{{ caseData.applicant.name }}</span>
+                            </div>
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.calendar" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Date of Birth</span>
+                                <span class="info-value">{{ caseData.applicant.dob }}</span>
+                            </div>
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.mapPin" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Country of Origin</span>
+                                <span class="info-value">{{ caseData.applicant.country }}</span>
+                            </div>
+                            <div class="info-row sensitive">
+                                <lucide-icon [img]="icons.fileText" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">A-Number</span>
+                                <span class="info-value font-mono">{{ maskValue(caseData.applicant.aNumber) }}</span>
+                                <button class="copy-btn" (click)="copyToClipboard(caseData.applicant.aNumber)"
+                                    title="Copy">
+                                    <lucide-icon [img]="icons.copy" [size]="14"></lucide-icon>
+                                </button>
+                            </div>
+                            <div class="info-row sensitive">
+                                <lucide-icon [img]="icons.fileText" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Passport Number</span>
+                                <span class="info-value font-mono">{{ maskValue(caseData.applicant.passportNumber, 2)
+                                    }}</span>
+                            </div>
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.checkCircle" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Current Status</span>
+                                <span class="info-value">{{ caseData.applicant.currentStatus }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Petition Details -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Petition Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.building" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Employer/Sponsor</span>
+                                <span class="info-value">{{ caseData.petition.employer }}</span>
+                            </div>
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.mapPin" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Location</span>
+                                <span class="info-value">{{ caseData.petition.location }}</span>
+                            </div>
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.user" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Job Title</span>
+                                <span class="info-value">{{ caseData.petition.jobTitle }}</span>
+                            </div>
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.fileText" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">SOC Code</span>
+                                <span class="info-value font-mono">{{ caseData.petition.socCode }}</span>
+                            </div>
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.fileText" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Wage Level</span>
+                                <span class="info-value">{{ caseData.petition.wageLevel }}</span>
+                            </div>
+                            <div class="info-row">
+                                <lucide-icon [img]="icons.calendar" [size]="16" class="info-icon"></lucide-icon>
+                                <span class="info-label">Requested Start Date</span>
+                                <span class="info-value">{{ caseData.petition.startDate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supporting Evidence -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Supporting Evidence</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="evidence-list">
+                            @for (doc of documents; track doc.id) {
+                            <div class="evidence-item" [class]="getDocStatusClass(doc.status)">
+                                <lucide-icon [img]="getDocStatusIcon(doc.status)" [size]="18"
+                                    class="evidence-icon"></lucide-icon>
+                                <span class="evidence-name">{{ doc.name }}</span>
+                                <span class="evidence-status">{{ doc.status }}</span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="overview-right">
+                <!-- AI Adjudication Summary -->
+                <div class="card ai-summary-card">
+                    <div class="card-header">
+                        <h3 class="card-title">AI Adjudication Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="confidence-gauge">
+                            <div class="gauge-circle" [style.--confidence]="caseData.confidence + '%'">
+                                <span class="gauge-value">{{ caseData.confidence }}%</span>
+                            </div>
+                            <div class="gauge-label">AI Confidence Score</div>
+                        </div>
+                        <div class="recommendation-badge"
+                            [class.approvable]="caseData.recommendation === 'LIKELY APPROVABLE'">
+                            {{ caseData.recommendation }}
+                        </div>
+                        <div class="key-findings">
+                            <h4>Key Findings</h4>
+                            <ul>
+                                <li>✓ Specialty occupation requirement met</li>
+                                <li>✓ Beneficiary qualifications verified</li>
+                                <li>✓ Employer-employee relationship established</li>
+                                <li>⚠ Wage level requires verification</li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary w-full" [routerLink]="[]" (click)="setActiveTab('ai-analysis')">
+                            View Full Analysis
+                            <lucide-icon [img]="icons.chevronRight" [size]="16"></lucide-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Processing Timeline -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Processing Timeline</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mini-timeline">
+                            @for (event of timeline; track event.id) {
+                            <div class="timeline-item" [class]="'timeline-' + event.status">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <span class="timeline-title">{{ event.title }}</span>
+                                    <span class="timeline-date">{{ event.date }}</span>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assigned Team -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Assigned Team</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="team-members">
+                            <div class="team-member">
+                                <div class="member-avatar">SC</div>
+                                <div class="member-info">
+                                    <span class="member-name">{{ caseData.team.attorney.name }}</span>
+                                    <span class="member-role">Lead Attorney</span>
+                                </div>
+                                <button class="contact-btn" title="Send email">
+                                    <lucide-icon [img]="icons.mail" [size]="16"></lucide-icon>
+                                </button>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">JW</div>
+                                <div class="member-info">
+                                    <span class="member-name">{{ caseData.team.paralegal.name }}</span>
+                                    <span class="member-role">Paralegal</span>
+                                </div>
+                                <button class="contact-btn" title="Send email">
+                                    <lucide-icon [img]="icons.mail" [size]="16"></lucide-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- DOCUMENTS TAB -->
+        @if (activeTab() === 'documents') {
+        <div class="documents-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Case Documents</h3>
+                    <button class="btn btn-primary btn-sm">
+                        <lucide-icon [img]="icons.paperclip" [size]="16"></lucide-icon>
+                        Upload Document
+                    </button>
+                </div>
+                <div class="documents-table">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Document Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Uploaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (doc of documents; track doc.id) {
+                            <tr>
+                                <td>
+                                    <div class="doc-name">
+                                        <lucide-icon [img]="icons.fileText" [size]="18"></lucide-icon>
+                                        {{ doc.name }}
+                                    </div>
+                                </td>
+                                <td>{{ doc.type }}</td>
+                                <td>
+                                    <span class="doc-status" [class]="getDocStatusClass(doc.status)">
+                                        <lucide-icon [img]="getDocStatusIcon(doc.status)" [size]="14"></lucide-icon>
+                                        {{ doc.status }}
+                                    </span>
+                                </td>
+                                <td>{{ doc.uploadedAt || '—' }}</td>
+                                <td>
+                                    <button class="btn btn-ghost btn-sm">View</button>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- AI ANALYSIS TAB -->
+        @if (activeTab() === 'ai-analysis') {
+        <div class="ai-analysis-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">AI Analysis Results</h3>
+                    <span class="analysis-timestamp">Last analyzed: 5 minutes ago</span>
+                </div>
+                <div class="card-body">
+                    <div class="criteria-list">
+                        @for (finding of aiFindings; track finding.criterion) {
+                        <div class="criterion-item" [class]="'criterion-' + finding.status">
+                            <div class="criterion-header">
+                                <div class="criterion-status">
+                                    @if (finding.status === 'pass') {
+                                    <lucide-icon [img]="icons.checkCircle" [size]="20"></lucide-icon>
+                                    } @else if (finding.status === 'warning') {
+                                    <lucide-icon [img]="icons.alertTriangle" [size]="20"></lucide-icon>
+                                    } @else {
+                                    <lucide-icon [img]="icons.xCircle" [size]="20"></lucide-icon>
+                                    }
+                                </div>
+                                <div class="criterion-info">
+                                    <h4 class="criterion-name">{{ finding.criterion }}</h4>
+                                    <p class="criterion-note">{{ finding.note }}</p>
+                                </div>
+                                <div class="criterion-confidence">
+                                    <span class="confidence-value"
+                                        [style.color]="getConfidenceColor(finding.confidence)">
+                                        {{ finding.confidence }}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hallucination Check -->
+            <div class="card hallucination-card">
+                <div class="hallucination-status success">
+                    <lucide-icon [img]="icons.checkCircle" [size]="24"></lucide-icon>
+                    <div class="hallucination-info">
+                        <h4>All Citations Verified</h4>
+                        <p>All legal citations have been verified against the USCIS Policy Manual and AAO precedent
+                            decisions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- TIMELINE TAB -->
+        @if (activeTab() === 'timeline') {
+        <div class="timeline-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Case Timeline</h3>
+                </div>
+                <div class="card-body">
+                    <div class="full-timeline">
+                        @for (event of timeline; track event.id) {
+                        <div class="timeline-event" [class]="'event-' + event.status">
+                            <div class="event-line">
+                                <div class="event-dot"></div>
+                            </div>
+                            <div class="event-content">
+                                <h4 class="event-title">{{ event.title }}</h4>
+                                <p class="event-description">{{ event.description }}</p>
+                                <span class="event-date">{{ event.date }}</span>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- NOTES TAB -->
+        @if (activeTab() === 'notes') {
+        <div class="notes-tab">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Case Notes</h3>
+                    <button class="btn btn-primary btn-sm">Add Note</button>
+                </div>
+                <div class="card-body">
+                    <div class="empty-state">
+                        <lucide-icon [img]="icons.fileText" [size]="48"></lucide-icon>
+                        <h4>No Notes Yet</h4>
+                        <p>Add notes to track important information about this case.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,127 @@
+<div class="chat-container">
+    <!-- Chat Header -->
+    <header class="chat-header">
+        <div class="header-content">
+            <div class="bot-avatar">
+                <lucide-icon [img]="icons.bot" [size]="24"></lucide-icon>
+            </div>
+            <div class="header-info">
+                <h1>AskVia Assistant</h1>
+                <span class="status-indicator">
+                    <span class="dot"></span> Online
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Messages Area -->
+    <div class="messages-area">
+        @for (msg of messages(); track msg.id) {
+        <div class="message-wrapper" [class.user-message]="msg.role === 'user'">
+            <div class="message-avatar">
+                <lucide-icon [img]="msg.role === 'user' ? icons.user : icons.bot" [size]="20"></lucide-icon>
+            </div>
+
+            <div class="message-content-group">
+                <div class="message-bubble">
+                    @if (msg.role === 'ai' && msg.confidence) {
+                    <div class="confidence-badge" [class.high]="msg.confidence > 0.8"
+                        [class.medium]="msg.confidence > 0.5 && msg.confidence <= 0.8">
+                        <lucide-icon [img]="icons.bot" [size]="14"></lucide-icon>
+                        {{ (msg.confidence * 100).toFixed(0) }}% Confidence
+                    </div>
+                    }
+
+                    <div class="text-content">{{ msg.content }}</div>
+
+                    @if (msg.files?.length) {
+                    <div class="attached-files-display">
+                        @for (file of msg.files; track $index) {
+                        <div class="file-chip">
+                            <lucide-icon [img]="icons.file" [size]="14"></lucide-icon>
+                            <span class="file-name">{{ file.name }}</span>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+
+                @if (msg.citations?.length) {
+                <div class="citations-container">
+                    <h4>Sources & Citations</h4>
+                    <div class="citations-list">
+                        @for (citation of msg.citations; track citation.url) {
+                        <a [href]="citation.url" target="_blank" class="citation-card">
+                            <div class="citation-title">{{ citation.title }}</div>
+                            <div class="citation-snippet">{{ citation.snippet }}</div>
+                        </a>
+                        }
+                    </div>
+                </div>
+                }
+
+                <div class="message-meta">
+                    <span class="time">{{ formatTime(msg.timestamp) }}</span>
+                    @if (msg.role === 'ai') {
+                    <div class="actions">
+                        <button class="action-btn" title="Copy">
+                            <lucide-icon [img]="icons.copy" [size]="14"></lucide-icon>
+                        </button>
+                        <button class="action-btn" title="Helpful">
+                            <lucide-icon [img]="icons.thumbsUp" [size]="14"></lucide-icon>
+                        </button>
+                        <button class="action-btn" title="Not Helpful">
+                            <lucide-icon [img]="icons.thumbsDown" [size]="14"></lucide-icon>
+                        </button>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+        }
+
+        @if (isTyping()) {
+        <div class="message-wrapper">
+            <div class="message-avatar">
+                <lucide-icon [img]="icons.bot" [size]="20"></lucide-icon>
+            </div>
+            <div class="typing-indicator">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        }
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+        @if (attachedFiles().length) {
+        <div class="file-preview-area">
+            @for (file of attachedFiles(); track $index) {
+            <div class="file-preview-chip">
+                <lucide-icon [img]="icons.file" [size]="14"></lucide-icon>
+                <span class="file-name">{{ file.name }}</span>
+                <button class="remove-file" (click)="removeFile($index)">&times;</button>
+            </div>
+            }
+        </div>
+        }
+
+        <div class="input-container">
+            <button class="attach-btn" (click)="fileInput.click()" title="Attach files">
+                <lucide-icon [img]="icons.paperclip" [size]="20"></lucide-icon>
+            </button>
+            <input #fileInput type="file" multiple hidden (change)="handleFileUpload($event)">
+
+            <input type="text" [(ngModel)]="inputMessage" (keyup.enter)="sendMessage()"
+                placeholder="Ask a question about immigration cases, laws, or documents..." class="chat-input">
+
+            <button class="send-btn" (click)="sendMessage()"
+                [disabled]="!inputMessage().trim() && !attachedFiles().length">
+                <lucide-icon [img]="icons.send" [size]="20"></lucide-icon>
+            </button>
+        </div>
+        <div class="disclaimer">
+            AskVia can make mistakes. Verify important information.
+        </div>
+    </div>
+</div>

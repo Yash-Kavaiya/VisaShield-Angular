@@ -1,0 +1,133 @@
+// ==========================================
+// VisaGuardian AI - Design System Variables
+// USA Government Aesthetic + Modern SaaS
+// ==========================================
+
+:root {
+  // ========================================
+  // PRIMARY PALETTE (USA Government)
+  // ========================================
+  --color-navy-primary: #0A2647;      // Deep government blue - headers, primary buttons
+  --color-navy-light: #1E3A5F;        // Lighter navy for hover states
+  --color-blue-secondary: #1E5AA8;    // Official seal blue - accents, links
+  --color-red-patriot: #BF0A30;       // American flag red - alerts, critical actions
+  --color-white-pure: #FFFFFF;        // Clean backgrounds, cards
+  --color-white-cream: #F7F9FC;       // Secondary backgrounds, alternating rows
+
+  // ========================================
+  // STATUS & ACCENT COLORS
+  // ========================================
+  --color-success: #2E7D32;           // Approved status, positive metrics
+  --color-warning: #F9A825;           // Pending review, caution states
+  --color-danger: #C62828;            // Denied, errors, critical alerts
+  --color-info: #1976D2;              // Informational badges, tooltips
+  --color-gold: #C9A227;              // Premium features, achievements, seals
+
+  // ========================================
+  // STATUS BADGE COLORS
+  // ========================================
+  --badge-approved-bg: #DEF7EC;
+  --badge-approved-text: #03543F;
+  --badge-denied-bg: #FDE8E8;
+  --badge-denied-text: #9B1C1C;
+  --badge-pending-bg: #FDF6B2;
+  --badge-pending-text: #723B13;
+  --badge-processing-bg: #E1EFFE;
+  --badge-processing-text: #1E429F;
+  --badge-rfe-bg: #EDEBFE;
+  --badge-rfe-text: #5521B5;
+
+  // ========================================
+  // VISA TYPE BADGE COLORS
+  // ========================================
+  --visa-h1b-bg: #E1EFFE;
+  --visa-h1b-text: #1E429F;
+  --visa-o1-bg: #FEF3C7;
+  --visa-o1-text: #92400E;
+  --visa-eb2-bg: #DEF7EC;
+  --visa-eb2-text: #03543F;
+
+  // ========================================
+  // NEUTRAL COLORS
+  // ========================================
+  --color-gray-50: #F9FAFB;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-600: #4B5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1F2937;
+  --color-gray-900: #111827;
+
+  // ========================================
+  // GRADIENTS
+  // ========================================
+  --gradient-hero: linear-gradient(135deg, #0A2647 0%, #1E5AA8 100%);
+  --gradient-card-hover: linear-gradient(180deg, #FFFFFF 0%, #F7F9FC 100%);
+  --gradient-patriotic: linear-gradient(135deg, #BF0A30 0%, #0A2647 100%);
+
+  // ========================================
+  // SPACING SCALE
+  // ========================================
+  --space-1: 0.25rem;   // 4px
+  --space-2: 0.5rem;    // 8px
+  --space-3: 0.75rem;   // 12px
+  --space-4: 1rem;      // 16px
+  --space-5: 1.25rem;   // 20px
+  --space-6: 1.5rem;    // 24px
+  --space-8: 2rem;      // 32px
+  --space-10: 2.5rem;   // 40px
+  --space-12: 3rem;     // 48px
+  --space-16: 4rem;     // 64px
+
+  // ========================================
+  // LAYOUT DIMENSIONS
+  // ========================================
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 72px;
+  --header-height: 64px;
+  --content-max-width: 1440px;
+  --card-padding: 24px;
+  --page-padding: 32px;
+  --grid-gutter: 24px;
+
+  // ========================================
+  // BORDER RADIUS
+  // ========================================
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  // ========================================
+  // SHADOWS
+  // ========================================
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  // ========================================
+  // TRANSITIONS
+  // ========================================
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  // ========================================
+  // Z-INDEX SCALE
+  // ========================================
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+  --z-toast: 800;
+}

@@ -1,0 +1,18 @@
+<div class="main-layout" [class.sidebar-collapsed]="sidebarCollapsed()">
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Sidebar -->
+    <app-sidebar (collapsedChange)="onSidebarCollapsedChange($event)"></app-sidebar>
+
+    <!-- Content wrapper -->
+    <div class="content-wrapper">
+        <!-- Header -->
+        <app-header [sidebarCollapsed]="sidebarCollapsed()"></app-header>
+
+        <!-- Main content -->
+        <main id="main-content" class="main-content">
+            <router-outlet></router-outlet>
+        </main>
+    </div>
+</div>
