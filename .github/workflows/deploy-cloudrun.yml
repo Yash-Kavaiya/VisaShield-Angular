@@ -24,6 +24,9 @@ env:
   FRONTEND_SERVICE: visashield-frontend
   BACKEND_SERVICE: visashield-backend
   REPOSITORY: visashield
+  # Workload Identity Federation settings
+  WORKLOAD_IDENTITY_PROVIDER: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  SERVICE_ACCOUNT: github-actions@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
 
 jobs:
   # Check if secrets are configured
@@ -32,37 +35,29 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       secrets_configured: ${{ steps.check.outputs.configured }}
-      auth_method: ${{ steps.check.outputs.auth_method }}
     steps:
       - name: Check if secrets are configured
         id: check
         env:
           HAS_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID != '' }}
-          HAS_SA_KEY: ${{ secrets.GCP_SA_KEY != '' }}
-          HAS_WIF: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' }}
+          HAS_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER != '' }}
         run: |
           echo "Checking secrets configuration..."
           
           if [ "$HAS_PROJECT_ID" != "true" ]; then
             echo "❌ GCP_PROJECT_ID secret is not configured"
             echo "configured=false" >> $GITHUB_OUTPUT
-            echo "auth_method=none" >> $GITHUB_OUTPUT
             exit 0
           fi
           
-          if [ "$HAS_SA_KEY" == "true" ]; then
-            echo "✅ Using Service Account Key authentication"
-            echo "configured=true" >> $GITHUB_OUTPUT
-            echo "auth_method=sa_key" >> $GITHUB_OUTPUT
-          elif [ "$HAS_WIF" == "true" ]; then
-            echo "✅ Using Workload Identity Federation authentication"
-            echo "configured=true" >> $GITHUB_OUTPUT
-            echo "auth_method=wif" >> $GITHUB_OUTPUT
-          else
-            echo "❌ No authentication method configured"
+          if [ "$HAS_PROJECT_NUMBER" != "true" ]; then
+            echo "❌ GCP_PROJECT_NUMBER secret is not configured"
             echo "configured=false" >> $GITHUB_OUTPUT
-            echo "auth_method=none" >> $GITHUB_OUTPUT
+            exit 0
           fi
+          
+          echo "✅ Required secrets are configured"
+          echo "configured=true" >> $GITHUB_OUTPUT
 
       - name: Show setup instructions if secrets missing
         if: steps.check.outputs.configured == 'false'
@@ -71,28 +66,46 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Please configure the following secrets in your repository:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Required Secrets:" >> $GITHUB_STEP_SUMMARY
-          echo "1. **GCP_PROJECT_ID** - Your Google Cloud Project ID" >> $GITHUB_STEP_SUMMARY
-          echo "2. **GCP_SA_KEY** - Service Account JSON key" >> $GITHUB_STEP_SUMMARY
+          echo "### Required Secrets (2 secrets only!):" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret | How to Get |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| \`GCP_PROJECT_ID\` | \`gcloud config get-value project\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`GCP_PROJECT_NUMBER\` | \`gcloud projects describe \$(gcloud config get-value project) --format='value(projectNumber)'\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Setup Instructions:" >> $GITHUB_STEP_SUMMARY
-          echo "See .github/DEPLOYMENT.md for detailed setup instructions" >> $GITHUB_STEP_SUMMARY
+          echo "### One-Time GCP Setup (run these commands once):" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Quick Setup:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "# Create service account" >> $GITHUB_STEP_SUMMARY
+          echo "# Set variables" >> $GITHUB_STEP_SUMMARY
+          echo "export PROJECT_ID=\$(gcloud config get-value project)" >> $GITHUB_STEP_SUMMARY
+          echo "export PROJECT_NUMBER=\$(gcloud projects describe \$PROJECT_ID --format='value(projectNumber)')" >> $GITHUB_STEP_SUMMARY
+          echo "export REPO='Yash-Kavaiya/VisaShield-Angular'" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Enable APIs" >> $GITHUB_STEP_SUMMARY
+          echo "gcloud services enable iamcredentials.googleapis.com run.googleapis.com artifactregistry.googleapis.com" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Create Workload Identity Pool" >> $GITHUB_STEP_SUMMARY
+          echo "gcloud iam workload-identity-pools create github-pool --location='global'" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Create Provider" >> $GITHUB_STEP_SUMMARY
+          echo "gcloud iam workload-identity-pools providers create-oidc github-provider \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --location='global' --workload-identity-pool='github-pool' \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --issuer-uri='https://token.actions.githubusercontent.com' \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --attribute-mapping='google.subject=assertion.sub,attribute.repository=assertion.repository'" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Create Service Account" >> $GITHUB_STEP_SUMMARY
           echo "gcloud iam service-accounts create github-actions --display-name='GitHub Actions'" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# Grant permissions" >> $GITHUB_STEP_SUMMARY
-          echo "gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \\" >> $GITHUB_STEP_SUMMARY
-          echo "  --member='serviceAccount:github-actions@YOUR_PROJECT_ID.iam.gserviceaccount.com' \\" >> $GITHUB_STEP_SUMMARY
-          echo "  --role='roles/run.admin'" >> $GITHUB_STEP_SUMMARY
+          echo "for role in run.admin artifactregistry.admin iam.serviceAccountUser storage.admin; do" >> $GITHUB_STEP_SUMMARY
+          echo "  gcloud projects add-iam-policy-binding \$PROJECT_ID \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "    --member='serviceAccount:github-actions@\$PROJECT_ID.iam.gserviceaccount.com' \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "    --role='roles/\$role'" >> $GITHUB_STEP_SUMMARY
+          echo "done" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Create key" >> $GITHUB_STEP_SUMMARY
-          echo "gcloud iam service-accounts keys create key.json \\" >> $GITHUB_STEP_SUMMARY
-          echo "  --iam-account=github-actions@YOUR_PROJECT_ID.iam.gserviceaccount.com" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Copy contents of key.json to GCP_SA_KEY secret" >> $GITHUB_STEP_SUMMARY
+          echo "# Allow GitHub to impersonate the service account" >> $GITHUB_STEP_SUMMARY
+          echo "gcloud iam service-accounts add-iam-policy-binding github-actions@\$PROJECT_ID.iam.gserviceaccount.com \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --role='roles/iam.workloadIdentityUser' \\\\" >> $GITHUB_STEP_SUMMARY
+          echo "  --member='principalSet://iam.googleapis.com/projects/\$PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/attribute.repository/\$REPO'" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           exit 1
 
@@ -110,18 +123,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Google Auth (Service Account Key)
-        if: needs.check-secrets.outputs.auth_method == 'sa_key'
+      - name: Google Auth (Workload Identity Federation)
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Google Auth (Workload Identity)
-        if: needs.check-secrets.outputs.auth_method == 'wif'
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -207,18 +213,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Google Auth (Service Account Key)
-        if: needs.check-secrets.outputs.auth_method == 'sa_key'
+      - name: Google Auth (Workload Identity Federation)
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Google Auth (Workload Identity)
-        if: needs.check-secrets.outputs.auth_method == 'wif'
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -303,8 +302,7 @@ jobs:
         run: |
           if [ "${{ needs.check-secrets.outputs.secrets_configured }}" != "true" ]; then
             echo "❌ Deployment skipped - secrets not configured"
-            echo "Please configure GCP_PROJECT_ID and GCP_SA_KEY in repository secrets"
-            echo "Go to: Settings → Secrets and variables → Actions → New repository secret"
+            echo "Please configure GCP_PROJECT_ID and GCP_PROJECT_NUMBER in repository secrets"
             exit 1
           elif [ "${{ needs.deploy-frontend.result }}" == "success" ] && [ "${{ needs.deploy-backend.result }}" == "success" ]; then
             echo "✅ All deployments successful!"
