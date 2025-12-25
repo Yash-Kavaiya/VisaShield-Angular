@@ -14,7 +14,7 @@
 
 FROM python:3.11-slim
 
-RUN pip install --no-cache-dir uv==0.8.13
+RUN pip install --no-cache-dir uv==0.8.13 ddtrace
 
 WORKDIR /code
 
@@ -30,6 +30,18 @@ ENV COMMIT_SHA=${COMMIT_SHA}
 ARG AGENT_VERSION=0.0.0
 ENV AGENT_VERSION=${AGENT_VERSION}
 
+# Datadog APM environment variables
+ENV DD_ENV="production"
+ENV DD_SERVICE="visashield-backend"
+ENV DD_VERSION="1.0.0"
+ENV DD_LOGS_INJECTION=true
+ENV DD_TRACE_SAMPLE_RATE="1"
+ENV DD_DATA_STREAMS_ENABLED=true
+ENV DD_TRACE_REMOVE_INTEGRATION_SERVICE_NAMES_ENABLED=true
+ENV DD_APPSEC_ENABLED=true
+ENV DD_LLMOBS_ENABLED=1
+ENV DD_LLMOBS_ML_APP=visaAI
+
 EXPOSE 8080
 
-CMD ["uv", "run", "uvicorn", "app.fast_api_app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uv", "run", "ddtrace-run", "uvicorn", "app.fast_api_app:app", "--host", "0.0.0.0", "--port", "8080"]

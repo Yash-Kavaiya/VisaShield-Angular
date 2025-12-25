@@ -1,6 +1,8 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 /google-cloud-sdk
 # Compiled output
+/frontend/node_modules/
+node_modules/
 /visashieldai/.github
 /dist
 /tmp
@@ -27,6 +29,7 @@ yarn-error.log
 
 # Miscellaneous
 /.angular/cache
+/frontend/.angular/
 .sass-cache/
 /connect.lock
 /coverage
