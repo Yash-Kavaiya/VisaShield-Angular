@@ -1,11 +1,12 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
-
+/google-cloud-sdk
 # Compiled output
+/visashieldai/.github
 /dist
 /tmp
 /out-tsc
 /bazel-out
-
+/.venv
 # Node
 /node_modules
 npm-debug.log
