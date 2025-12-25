@@ -139,7 +139,7 @@ jobs:
       - name: Lint and test frontend
         working-directory: ./frontend
         run: |
-          npm run test -- --watch=false --browsers=ChromeHeadless
+          npm run test:ci
 
       - name: Set up Python
         uses: actions/setup-python@v4

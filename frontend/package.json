@@ -7,7 +7,8 @@
     "start:dd": "DD_ENV=development DD_LOGS_INJECTION=true DD_TRACE_SAMPLE_RATE=1 DD_DATA_STREAMS_ENABLED=true DD_TRACE_REMOVE_INTEGRATION_SERVICE_NAMES_ENABLED=true DD_APPSEC_ENABLED=true node -r ./src/tracer.js node_modules/@angular/cli/bin/ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadless"
   },
   "prettier": {
     "printWidth": 100,
