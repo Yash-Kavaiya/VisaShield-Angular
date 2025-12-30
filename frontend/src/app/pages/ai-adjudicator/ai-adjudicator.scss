@@ -625,6 +625,291 @@
 }
 
 // ========================================
+// ERROR BANNER
+// ========================================
+.error-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: rgba(198, 40, 40, 0.1);
+    border: 1px solid var(--color-danger);
+    border-radius: var(--radius-md);
+    color: var(--color-danger);
+    font-size: 0.875rem;
+
+    .btn-ghost {
+        margin-left: auto;
+    }
+}
+
+// ========================================
+// CONFIDENCE DISPLAY
+// ========================================
+.confidence-display {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-gray-200);
+}
+
+.confidence-label {
+    font-size: 0.8125rem;
+    color: var(--color-gray-500);
+}
+
+.confidence-value {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+
+    &.high {
+        color: var(--color-success);
+        background: rgba(46, 125, 50, 0.1);
+    }
+
+    &.medium {
+        color: var(--color-warning);
+        background: rgba(249, 168, 37, 0.1);
+    }
+
+    &.low {
+        color: var(--color-danger);
+        background: rgba(198, 40, 40, 0.1);
+    }
+}
+
+// ========================================
+// EMPTY STATE
+// ========================================
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: var(--space-8);
+    text-align: center;
+    color: var(--color-gray-400);
+
+    h3 {
+        margin: var(--space-4) 0 var(--space-2);
+        color: var(--color-gray-600);
+        font-size: 1.125rem;
+    }
+
+    p {
+        font-size: 0.875rem;
+        max-width: 280px;
+    }
+}
+
+// ========================================
+// STEP CONFIDENCE BAR
+// ========================================
+.step-confidence {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+
+    .confidence-bar {
+        flex: 1;
+        height: 4px;
+        background: var(--color-gray-200);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        background: var(--color-success);
+        border-radius: var(--radius-full);
+        transition: width var(--transition-base);
+    }
+
+    .confidence-text {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: var(--color-success);
+        min-width: 35px;
+    }
+}
+
+// ========================================
+// ANALYSIS SUMMARY
+// ========================================
+.analysis-summary {
+    margin-top: var(--space-4);
+    padding: var(--space-3);
+    background: var(--color-gray-50);
+    border-radius: var(--radius-md);
+    border-top: 3px solid var(--color-navy-primary);
+
+    h4 {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-gray-500);
+        margin-bottom: var(--space-3);
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-2) 0;
+        border-bottom: 1px solid var(--color-gray-200);
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    .summary-label {
+        font-size: 0.75rem;
+        color: var(--color-gray-500);
+    }
+
+    .summary-value {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--color-gray-800);
+
+        &.approve {
+            color: var(--color-success);
+        }
+
+        &.review {
+            color: var(--color-warning);
+        }
+    }
+}
+
+// ========================================
+// MODAL
+// ========================================
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--space-4);
+}
+
+.modal-content {
+    background: var(--color-white-pure);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-gray-200);
+
+    h2 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--color-navy-primary);
+        margin: 0;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--color-gray-400);
+        cursor: pointer;
+        line-height: 1;
+
+        &:hover {
+            color: var(--color-gray-600);
+        }
+    }
+}
+
+.modal-body {
+    padding: var(--space-5);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-top: 1px solid var(--color-gray-200);
+    background: var(--color-gray-50);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+
+    label {
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--color-gray-700);
+    }
+
+    input,
+    select {
+        padding: var(--space-2) var(--space-3);
+        border: 1px solid var(--color-gray-300);
+        border-radius: var(--radius-md);
+        font-size: 0.875rem;
+        color: var(--color-gray-900);
+        background: var(--color-white-pure);
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-blue-secondary);
+            box-shadow: 0 0 0 3px rgba(30, 90, 168, 0.1);
+        }
+    }
+
+    select {
+        cursor: pointer;
+    }
+}
+
+// ========================================
+// TOOL STEP STYLING
+// ========================================
+.reasoning-step.step-tool {
+    border-left-color: var(--color-info);
+    background: rgba(25, 118, 210, 0.05);
+}
+
+// ========================================
 // RESPONSIVE
 // ========================================
 @media (max-width: 1200px) {
@@ -634,6 +919,10 @@
 
     .criteria-sidebar {
         display: none;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -655,5 +944,11 @@
 
     .control-buttons {
         width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .modal-content {
+        max-height: 100vh;
+        border-radius: 0;
     }
 }

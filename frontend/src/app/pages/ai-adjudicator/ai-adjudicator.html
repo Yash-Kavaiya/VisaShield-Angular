@@ -4,9 +4,9 @@
         <div class="header-info">
             <h1 class="page-title">AI Adjudicator</h1>
             <div class="case-info">
-                <span class="case-number font-mono">{{ currentCase.caseNumber }}</span>
-                <span class="badge badge-h1b">{{ currentCase.visaType }}</span>
-                <span class="applicant-name">{{ currentCase.applicant }}</span>
+                <span class="case-number font-mono">{{ currentCase().case_number }}</span>
+                <span class="badge badge-h1b">{{ currentCase().visa_type }}</span>
+                <span class="applicant-name">{{ currentCase().beneficiary_name }}</span>
             </div>
         </div>
         <div class="header-controls">
@@ -18,169 +18,353 @@
                 <span class="time-value">{{ estimatedRemaining() }}</span>
             </div>
             <div class="control-buttons">
-                <button class="btn btn-secondary" (click)="toggleProcessing()">
-                    <lucide-icon [img]="isProcessing() ? icons.pause : icons.play" [size]="18"></lucide-icon>
-                    {{ isProcessing() ? 'Pause' : 'Resume' }}
-                </button>
-                <button class="btn btn-secondary" (click)="skipToSummary()">
-                    <lucide-icon [img]="icons.skipForward" [size]="18"></lucide-icon>
-                    Skip to Summary
-                </button>
+                @if (!isProcessing() && reasoningSteps().length === 0) {
+                    <button class="btn btn-primary" (click)="startAnalysis()">
+                        <lucide-icon [img]="icons.play" [size]="18"></lucide-icon>
+                        Start Analysis
+                    </button>
+                    <button class="btn btn-secondary" (click)="openCaseForm()">
+                        <lucide-icon [img]="icons.settings" [size]="18"></lucide-icon>
+                        Configure Case
+                    </button>
+                } @else {
+                    <button class="btn btn-secondary" (click)="toggleProcessing()" [disabled]="!isProcessing()">
+                        <lucide-icon [img]="isPaused() ? icons.play : icons.pause" [size]="18"></lucide-icon>
+                        {{ isPaused() ? 'Resume' : 'Pause' }}
+                    </button>
+                    <button class="btn btn-secondary" (click)="resetAnalysis()">
+                        <lucide-icon [img]="icons.refreshCw" [size]="18"></lucide-icon>
+                        Reset
+                    </button>
+                    @if (!isProcessing() && reasoningSteps().length > 0) {
+                        <button class="btn btn-primary" (click)="downloadReport()">
+                            <lucide-icon [img]="icons.download" [size]="18"></lucide-icon>
+                            Download Report
+                        </button>
+                    }
+                }
             </div>
         </div>
     </div>
+
+    <!-- Error Display -->
+    @if (error()) {
+        <div class="error-banner">
+            <lucide-icon [img]="icons.alertTriangle" [size]="18"></lucide-icon>
+            <span>{{ error() }}</span>
+            <button class="btn btn-ghost btn-sm" (click)="resetAnalysis()">Retry</button>
+        </div>
+    }
 
     <!-- Progress Bar -->
     <div class="progress-section">
         <div class="stages-bar">
-            @for (stage of stages; track stage.id) {
-            <div class="stage" [class]="'stage-' + getStageStatus(stage.id)">
-                <div class="stage-indicator">
-                    <lucide-icon [img]="getStageIcon(getStageStatus(stage.id))" [size]="16"></lucide-icon>
+            @for (stage of stages; track stage.id; let i = $index) {
+                <div class="stage" [class]="'stage-' + getStageStatus(stage.id)">
+                    <div class="stage-indicator">
+                        <lucide-icon [img]="getStageIcon(getStageStatus(stage.id))" [size]="16"></lucide-icon>
+                    </div>
+                    <span class="stage-name">{{ stage.name }}</span>
                 </div>
-                <span class="stage-name">{{ stage.name }}</span>
-            </div>
-            @if (stage.id < stages.length - 1) { <div class="stage-connector"
-                [class.completed]="stage.id < currentStage()">
-        </div>
-        }
-        }
-    </div>
-</div>
-
-<!-- Main Content -->
-<div class="main-content">
-    <!-- Left Side - Document Viewer -->
-    <div class="document-panel">
-        <div class="panel-header">
-            <lucide-icon [img]="icons.fileText" [size]="18"></lucide-icon>
-            <span class="panel-title">{{ currentCase.currentDocument }}</span>
-            <span class="analyzing-badge">
-                <span class="pulse-dot"></span>
-                Analyzing
-            </span>
-        </div>
-        <div class="document-viewer">
-            <div class="document-content" [style.transform]="'scale(' + zoomLevel() / 100 + ')'">
-                <!-- Simulated PDF content with highlights -->
-                <div class="pdf-page">
-                    <div class="form-header">
-                        <div class="form-number">OMB No. 1615-0009</div>
-                        <div class="form-title">Department of Homeland Security<br>U.S. Citizenship and Immigration
-                            Services</div>
-                        <h2>I-129, Petition for a Nonimmigrant Worker</h2>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Part 1. Petitioner Information</h3>
-                        <div class="form-field">
-                            <label>1. Legal Business Name</label>
-                            <div class="field-value highlighted">TechCorp Solutions Inc.</div>
-                        </div>
-                        <div class="form-field">
-                            <label>2. Mailing Address</label>
-                            <div class="field-value">123 Innovation Drive, San Francisco, CA 94105</div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Part 2. Information About This Petition</h3>
-                        <div class="form-field">
-                            <label>3. Requested Action</label>
-                            <div class="field-value highlighted">New employment - Initial grant of status</div>
-                        </div>
-                        <div class="form-field">
-                            <label>4. Classification Sought</label>
-                            <div class="field-value highlighted">H-1B Specialty Occupation</div>
-                        </div>
-                    </div>
-
-                    <!-- AI Annotation bubble -->
-                    <div class="ai-annotation">
-                        <div class="annotation-header">AI Interpretation</div>
-                        <div class="annotation-content">
-                            Petitioner is established U.S. company with valid EIN. Classification H-1B confirmed.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="document-controls">
-            <div class="page-nav">
-                <button class="control-btn" (click)="prevPage()" [disabled]="currentPage() === 1">
-                    <lucide-icon [img]="icons.chevronLeft" [size]="18"></lucide-icon>
-                </button>
-                <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
-                <button class="control-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages()">
-                    <lucide-icon [img]="icons.chevronRightIcon" [size]="18"></lucide-icon>
-                </button>
-            </div>
-            <div class="zoom-controls">
-                <button class="control-btn" (click)="zoomOut()" [disabled]="zoomLevel() <= 50">
-                    <lucide-icon [img]="icons.zoomOut" [size]="18"></lucide-icon>
-                </button>
-                <span class="zoom-level">{{ zoomLevel() }}%</span>
-                <button class="control-btn" (click)="zoomIn()" [disabled]="zoomLevel() >= 200">
-                    <lucide-icon [img]="icons.zoomIn" [size]="18"></lucide-icon>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Right Side - AI Reasoning Panel -->
-    <div class="reasoning-panel">
-        <div class="panel-header">
-            <lucide-icon [img]="icons.brain" [size]="18"></lucide-icon>
-            <span class="panel-title">Live Analysis</span>
-            @if (isProcessing()) {
-            <span class="processing-indicator">
-                <span class="typing-dot"></span>
-                <span class="typing-dot"></span>
-                <span class="typing-dot"></span>
-            </span>
+                @if (i < stages.length - 1) {
+                    <div class="stage-connector" [class.completed]="i < currentStageIndex()"></div>
+                }
             }
         </div>
-        <div class="reasoning-content">
-            <div class="reasoning-stream">
-                @for (step of reasoningSteps; track step.id) {
-                <div class="reasoning-step" [class]="'step-' + step.type">
-                    <div class="step-header">
-                        <span class="step-type">{{ getReasoningTypeLabel(step.type) }}</span>
-                        <span class="step-time">{{ step.timestamp }}</span>
-                    </div>
-                    <div class="step-content">{{ step.content }}</div>
-                </div>
-                }
+        @if (confidence() > 0) {
+            <div class="confidence-display">
+                <span class="confidence-label">Overall Confidence:</span>
+                <span class="confidence-value" [class.high]="confidence() >= 80" [class.medium]="confidence() >= 60 && confidence() < 80" [class.low]="confidence() < 60">
+                    {{ confidence() }}%
+                </span>
+            </div>
+        }
+    </div>
 
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Left Side - Document Viewer -->
+        <div class="document-panel">
+            <div class="panel-header">
+                <lucide-icon [img]="icons.fileText" [size]="18"></lucide-icon>
+                <span class="panel-title">I-129 Petition Form</span>
                 @if (isProcessing()) {
-                <div class="reasoning-step step-current">
-                    <div class="step-content typing">
-                        Analyzing employer-employee relationship documentation...
-                        <span class="cursor"></span>
+                    <span class="analyzing-badge">
+                        <span class="pulse-dot"></span>
+                        Analyzing
+                    </span>
+                }
+            </div>
+            <div class="document-viewer">
+                <div class="document-content" [style.transform]="'scale(' + zoomLevel() / 100 + ')'">
+                    <!-- Simulated PDF content with highlights -->
+                    <div class="pdf-page">
+                        <div class="form-header">
+                            <div class="form-number">OMB No. 1615-0009</div>
+                            <div class="form-title">Department of Homeland Security<br>U.S. Citizenship and Immigration Services</div>
+                            <h2>I-129, Petition for a Nonimmigrant Worker</h2>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Part 1. Petitioner Information</h3>
+                            <div class="form-field">
+                                <label>1. Legal Business Name</label>
+                                <div class="field-value highlighted">{{ currentCase().petitioner_name }}</div>
+                            </div>
+                            <div class="form-field">
+                                <label>2. Mailing Address</label>
+                                <div class="field-value">{{ currentCase().work_location }}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Part 2. Information About This Petition</h3>
+                            <div class="form-field">
+                                <label>3. Requested Action</label>
+                                <div class="field-value highlighted">New employment - Initial grant of status</div>
+                            </div>
+                            <div class="form-field">
+                                <label>4. Classification Sought</label>
+                                <div class="field-value highlighted">{{ currentCase().visa_type }} Specialty Occupation</div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Part 3. Beneficiary Information</h3>
+                            <div class="form-field">
+                                <label>5. Full Name</label>
+                                <div class="field-value">{{ currentCase().beneficiary_name }}</div>
+                            </div>
+                            <div class="form-field">
+                                <label>6. Job Title</label>
+                                <div class="field-value highlighted">{{ currentCase().job_title }}</div>
+                            </div>
+                            <div class="form-field">
+                                <label>7. Offered Wage</label>
+                                <div class="field-value highlighted">${{ currentCase().offered_wage?.toLocaleString() }}/year</div>
+                            </div>
+                        </div>
+
+                        <!-- AI Annotation bubble -->
+                        @if (isProcessing() || reasoningSteps().length > 0) {
+                            <div class="ai-annotation">
+                                <div class="annotation-header">AI Interpretation</div>
+                                <div class="annotation-content">
+                                    @if (reasoningSteps().length > 0) {
+                                        {{ reasoningSteps()[reasoningSteps().length - 1].content | slice:0:150 }}...
+                                    } @else {
+                                        Analyzing petition form structure and data completeness...
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
-                }
+            </div>
+            <div class="document-controls">
+                <div class="page-nav">
+                    <button class="control-btn" (click)="prevPage()" [disabled]="currentPage() === 1">
+                        <lucide-icon [img]="icons.chevronLeft" [size]="18"></lucide-icon>
+                    </button>
+                    <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+                    <button class="control-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages()">
+                        <lucide-icon [img]="icons.chevronRightIcon" [size]="18"></lucide-icon>
+                    </button>
+                </div>
+                <div class="zoom-controls">
+                    <button class="control-btn" (click)="zoomOut()" [disabled]="zoomLevel() <= 50">
+                        <lucide-icon [img]="icons.zoomOut" [size]="18"></lucide-icon>
+                    </button>
+                    <span class="zoom-level">{{ zoomLevel() }}%</span>
+                    <button class="control-btn" (click)="zoomIn()" [disabled]="zoomLevel() >= 200">
+                        <lucide-icon [img]="icons.zoomIn" [size]="18"></lucide-icon>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Criteria Sidebar -->
-    <div class="criteria-sidebar">
-        <div class="sidebar-header">
-            <h3>Evaluation Criteria</h3>
-        </div>
-        <div class="criteria-list">
-            @for (criterion of criteria; track criterion.id) {
-            <div class="criterion-item" [class]="'criterion-' + criterion.status">
-                <lucide-icon [img]="getCriterionIcon(criterion.status)" [size]="16"
-                    class="criterion-icon"></lucide-icon>
-                <span class="criterion-name">{{ criterion.name }}</span>
-                @if (criterion.confidence) {
-                <span class="criterion-confidence">{{ criterion.confidence }}%</span>
+        <!-- Right Side - AI Reasoning Panel -->
+        <div class="reasoning-panel">
+            <div class="panel-header">
+                <lucide-icon [img]="icons.brain" [size]="18"></lucide-icon>
+                <span class="panel-title">Live Analysis</span>
+                @if (isProcessing()) {
+                    <span class="processing-indicator">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </span>
                 }
             </div>
+            <div class="reasoning-content">
+                @if (reasoningSteps().length === 0 && !isProcessing()) {
+                    <div class="empty-state">
+                        <lucide-icon [img]="icons.brain" [size]="48"></lucide-icon>
+                        <h3>Ready to Analyze</h3>
+                        <p>Click "Start Analysis" to begin AI-powered adjudication of this petition.</p>
+                    </div>
+                } @else {
+                    <div class="reasoning-stream">
+                        @for (step of reasoningSteps(); track step.id) {
+                            <div class="reasoning-step" [class]="getReasoningTypeClass(step.type)">
+                                <div class="step-header">
+                                    <span class="step-type">{{ getReasoningTypeLabel(step.type) }}</span>
+                                    <span class="step-time">{{ step.timestamp | slice:11:19 }}</span>
+                                </div>
+                                <div class="step-content">{{ step.content }}</div>
+                                @if (step.confidence) {
+                                    <div class="step-confidence">
+                                        <span class="confidence-bar">
+                                            <span class="confidence-fill" [style.width.%]="step.confidence"></span>
+                                        </span>
+                                        <span class="confidence-text">{{ step.confidence }}%</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (isProcessing()) {
+                            <div class="reasoning-step step-current">
+                                <div class="step-content typing">
+                                    Analyzing...
+                                    <span class="cursor"></span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Criteria Sidebar -->
+        <div class="criteria-sidebar">
+            <div class="sidebar-header">
+                <h3>Evaluation Criteria</h3>
+            </div>
+            <div class="criteria-list">
+                @for (criterion of criteria(); track criterion.id) {
+                    <div class="criterion-item" [class]="'criterion-' + criterion.status">
+                        <lucide-icon [img]="getCriterionIcon(criterion.status)" [size]="16" class="criterion-icon"></lucide-icon>
+                        <span class="criterion-name">{{ criterion.name }}</span>
+                        @if (criterion.confidence) {
+                            <span class="criterion-confidence">{{ criterion.confidence }}%</span>
+                        }
+                    </div>
+                }
+            </div>
+            
+            <!-- Analysis Summary -->
+            @if (!isProcessing() && confidence() > 0) {
+                <div class="analysis-summary">
+                    <h4>Analysis Summary</h4>
+                    <div class="summary-item">
+                        <span class="summary-label">Recommendation:</span>
+                        <span class="summary-value" [class.approve]="confidence() >= 80" [class.review]="confidence() < 80">
+                            {{ confidence() >= 80 ? 'LIKELY APPROVABLE' : 'REQUIRES REVIEW' }}
+                        </span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Confidence:</span>
+                        <span class="summary-value">{{ confidence() }}%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Processing Time:</span>
+                        <span class="summary-value">{{ elapsedTime() }}</span>
+                    </div>
+                </div>
             }
         </div>
     </div>
-</div>
+
+    <!-- Case Configuration Modal -->
+    @if (showCaseForm()) {
+        <div class="modal-overlay" (click)="closeCaseForm()">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>Configure Case</h2>
+                    <button class="btn-close" (click)="closeCaseForm()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Case Number</label>
+                            <input type="text" [value]="currentCase().case_number" 
+                                   (input)="updateCaseField('case_number', $any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Visa Type</label>
+                            <select [value]="currentCase().visa_type"
+                                    (change)="updateCaseField('visa_type', $any($event.target).value)">
+                                <option value="H-1B">H-1B</option>
+                                <option value="O-1">O-1</option>
+                                <option value="EB-2 NIW">EB-2 NIW</option>
+                                <option value="L-1">L-1</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Petitioner Name</label>
+                            <input type="text" [value]="currentCase().petitioner_name"
+                                   (input)="updateCaseField('petitioner_name', $any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Beneficiary Name</label>
+                            <input type="text" [value]="currentCase().beneficiary_name"
+                                   (input)="updateCaseField('beneficiary_name', $any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Job Title</label>
+                            <input type="text" [value]="currentCase().job_title"
+                                   (input)="updateCaseField('job_title', $any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Work Location</label>
+                            <input type="text" [value]="currentCase().work_location"
+                                   (input)="updateCaseField('work_location', $any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Degree Type</label>
+                            <select [value]="currentCase().degree_type"
+                                    (change)="updateCaseField('degree_type', $any($event.target).value)">
+                                <option value="Bachelor's">Bachelor's</option>
+                                <option value="Master's">Master's</option>
+                                <option value="PhD">PhD</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Degree Field</label>
+                            <input type="text" [value]="currentCase().degree_field"
+                                   (input)="updateCaseField('degree_field', $any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Years Experience</label>
+                            <input type="number" [value]="currentCase().years_experience"
+                                   (input)="updateCaseField('years_experience', +$any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Offered Wage ($)</label>
+                            <input type="number" [value]="currentCase().offered_wage"
+                                   (input)="updateCaseField('offered_wage', +$any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Prevailing Wage ($)</label>
+                            <input type="number" [value]="currentCase().prevailing_wage"
+                                   (input)="updateCaseField('prevailing_wage', +$any($event.target).value)">
+                        </div>
+                        <div class="form-group">
+                            <label>LCA Number</label>
+                            <input type="text" [value]="currentCase().lca_number"
+                                   (input)="updateCaseField('lca_number', $any($event.target).value)">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" (click)="closeCaseForm()">Cancel</button>
+                    <button class="btn btn-primary" (click)="startAnalysis()">
+                        <lucide-icon [img]="icons.play" [size]="18"></lucide-icon>
+                        Start Analysis
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
 </div>

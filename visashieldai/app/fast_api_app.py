@@ -21,6 +21,7 @@ from google.cloud import logging as google_cloud_logging
 
 from app.app_utils.telemetry import setup_telemetry
 from app.app_utils.typing import Feedback
+from app.adjudicator_api import router as adjudicator_router
 
 setup_telemetry()
 _, project_id = google.auth.default()
@@ -49,6 +50,9 @@ app: FastAPI = get_fast_api_app(
 )
 app.title = "visashieldai"
 app.description = "API for interacting with the Agent visashieldai"
+
+# Include adjudicator API routes
+app.include_router(adjudicator_router)
 
 
 @app.post("/feedback")
