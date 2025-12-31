@@ -6,6 +6,7 @@ import json
 import uuid
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
@@ -53,11 +54,11 @@ class AdjudicationEvent(BaseModel):
     stage: str | None = None
     content: str | None = None
     tool_name: str | None = None
-    tool_result: dict | None = None
+    tool_result: dict[str, Any] | None = None
     confidence: int | None = None
     timestamp: str = ""
 
-    def __init__(self, **data):
+    def __init__(self, **data: Any) -> None:
         if "timestamp" not in data or not data["timestamp"]:
             data["timestamp"] = datetime.now().isoformat()
         super().__init__(**data)
@@ -69,7 +70,9 @@ class AdjudicationEvent(BaseModel):
 
 
 @router.post("/analyze/stream")
-async def analyze_case_stream(request: AdjudicationRequest):
+async def analyze_case_stream(
+    request: AdjudicationRequest,
+) -> StreamingResponse:
     """Stream the adjudication analysis in real-time."""
 
     async def generate_events() -> AsyncGenerator[str, None]:
@@ -116,8 +119,10 @@ Provide detailed reasoning for each step."""
                 # Process different event types
                 if hasattr(event, "actions") and event.actions:
                     for action in event.actions:
-                        if hasattr(action, "function_calls") and action.function_calls:
-                            for fc in action.function_calls:
+                        if (
+                            hasattr(action, "function_calls") and action.function_calls  # type: ignore[union-attr]
+                        ):
+                            for fc in action.function_calls:  # type: ignore[union-attr]
                                 # Tool call event
                                 yield f"data: {AdjudicationEvent(event_type='tool_call', tool_name=fc.name, content=f'Executing: {fc.name}').model_dump_json()}\n\n"
 
@@ -136,18 +141,20 @@ Provide detailed reasoning for each step."""
 
                 # Check for final response
                 if event.is_final_response() and event.content:
-                    for part in event.content.parts:
-                        if hasattr(part, "text") and part.text:
-                            # Send reasoning content in chunks
-                            text = part.text
-                            chunks = [
-                                text[i : i + 200] for i in range(0, len(text), 200)
-                            ]
-                            for chunk in chunks:
-                                yield f"data: {AdjudicationEvent(event_type='reasoning', content=chunk).model_dump_json()}\n\n"
-                                await asyncio.sleep(
-                                    0.05
-                                )  # Small delay for streaming effect
+                    parts = event.content.parts
+                    if parts:
+                        for part in parts:
+                            if hasattr(part, "text") and part.text:
+                                # Send reasoning content in chunks
+                                text = part.text
+                                chunks = [
+                                    text[i : i + 200] for i in range(0, len(text), 200)
+                                ]
+                                for chunk in chunks:
+                                    yield f"data: {AdjudicationEvent(event_type='reasoning', content=chunk).model_dump_json()}\n\n"
+                                    await asyncio.sleep(
+                                        0.05
+                                    )  # Small delay for streaming effect
 
             # Send completion event
             yield f"data: {AdjudicationEvent(event_type='complete', content='Analysis complete', confidence=89).model_dump_json()}\n\n"
@@ -172,7 +179,9 @@ Provide detailed reasoning for each step."""
 
 
 @router.websocket("/ws/{user_id}/{session_id}")
-async def websocket_adjudication(websocket: WebSocket, user_id: str, session_id: str):
+async def websocket_adjudication(
+    websocket: WebSocket, user_id: str, session_id: str
+) -> None:
     """WebSocket endpoint for real-time bidirectional adjudication."""
     await websocket.accept()
 
@@ -209,8 +218,10 @@ Perform complete adjudication analysis with all required tools."""
                 # Send tool calls
                 if hasattr(event, "actions") and event.actions:
                     for action in event.actions:
-                        if hasattr(action, "function_calls") and action.function_calls:
-                            for fc in action.function_calls:
+                        if (
+                            hasattr(action, "function_calls") and action.function_calls  # type: ignore[union-attr]
+                        ):
+                            for fc in action.function_calls:  # type: ignore[union-attr]
                                 await websocket.send_json(
                                     {
                                         "event_type": "tool_call",
@@ -222,15 +233,17 @@ Perform complete adjudication analysis with all required tools."""
 
                 # Send final response
                 if event.is_final_response() and event.content:
-                    for part in event.content.parts:
-                        if hasattr(part, "text") and part.text:
-                            await websocket.send_json(
-                                {
-                                    "event_type": "reasoning",
-                                    "content": part.text,
-                                    "timestamp": datetime.now().isoformat(),
-                                }
-                            )
+                    parts = event.content.parts
+                    if parts:
+                        for part in parts:
+                            if hasattr(part, "text") and part.text:
+                                await websocket.send_json(
+                                    {
+                                        "event_type": "reasoning",
+                                        "content": part.text,
+                                        "timestamp": datetime.now().isoformat(),
+                                    }
+                                )
 
             # Send completion
             await websocket.send_json(
@@ -260,7 +273,7 @@ Perform complete adjudication analysis with all required tools."""
 
 
 @router.post("/analyze")
-async def analyze_case(request: AdjudicationRequest) -> dict:
+async def analyze_case(request: AdjudicationRequest) -> dict[str, Any]:
     """Perform complete case analysis (non-streaming)."""
     user_id = request.user_id or f"user_{uuid.uuid4().hex[:8]}"
     session_id = request.session_id or f"session_{uuid.uuid4().hex[:8]}"
@@ -271,7 +284,7 @@ Petitioner: {case.petitioner_name}, Beneficiary: {case.beneficiary_name}
 Perform complete adjudication with all tools and provide final recommendation."""
 
     result_text = ""
-    tool_calls = []
+    tool_calls: list[str] = []
 
     async for event in runner.run_async(
         user_id=user_id,
@@ -280,14 +293,18 @@ Perform complete adjudication with all tools and provide final recommendation.""
     ):
         if hasattr(event, "actions") and event.actions:
             for action in event.actions:
-                if hasattr(action, "function_calls") and action.function_calls:
-                    for fc in action.function_calls:
+                if (
+                    hasattr(action, "function_calls") and action.function_calls  # type: ignore[union-attr]
+                ):
+                    for fc in action.function_calls:  # type: ignore[union-attr]
                         tool_calls.append(fc.name)
 
         if event.is_final_response() and event.content:
-            for part in event.content.parts:
-                if hasattr(part, "text") and part.text:
-                    result_text += part.text
+            parts = event.content.parts
+            if parts:
+                for part in parts:
+                    if hasattr(part, "text") and part.text:
+                        result_text += part.text
 
     return {
         "case_number": case.case_number,
@@ -304,9 +321,9 @@ Perform complete adjudication with all tools and provide final recommendation.""
 
 
 @router.get("/criteria/{visa_type}")
-async def get_evaluation_criteria(visa_type: str) -> dict:
+async def get_evaluation_criteria(visa_type: str) -> dict[str, Any]:
     """Get evaluation criteria for a visa type."""
-    criteria_map = {
+    criteria_map: dict[str, list[dict[str, str]]] = {
         "H-1B": [
             {
                 "id": "1",
@@ -387,6 +404,6 @@ async def get_evaluation_criteria(visa_type: str) -> dict:
 
 
 @router.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy", "service": "adjudicator"}
