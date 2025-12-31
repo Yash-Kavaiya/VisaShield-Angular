@@ -119,10 +119,9 @@ Provide detailed reasoning for each step."""
                 # Process different event types
                 if hasattr(event, "actions") and event.actions:
                     for action in event.actions:
-                        if (
-                            hasattr(action, "function_calls") and action.function_calls  # type: ignore[union-attr]
-                        ):
-                            for fc in action.function_calls:  # type: ignore[union-attr]
+                        func_calls = getattr(action, "function_calls", None)
+                        if func_calls:
+                            for fc in func_calls:
                                 # Tool call event
                                 yield f"data: {AdjudicationEvent(event_type='tool_call', tool_name=fc.name, content=f'Executing: {fc.name}').model_dump_json()}\n\n"
 
@@ -218,10 +217,9 @@ Perform complete adjudication analysis with all required tools."""
                 # Send tool calls
                 if hasattr(event, "actions") and event.actions:
                     for action in event.actions:
-                        if (
-                            hasattr(action, "function_calls") and action.function_calls  # type: ignore[union-attr]
-                        ):
-                            for fc in action.function_calls:  # type: ignore[union-attr]
+                        func_calls = getattr(action, "function_calls", None)
+                        if func_calls:
+                            for fc in func_calls:
                                 await websocket.send_json(
                                     {
                                         "event_type": "tool_call",
@@ -293,10 +291,9 @@ Perform complete adjudication with all tools and provide final recommendation.""
     ):
         if hasattr(event, "actions") and event.actions:
             for action in event.actions:
-                if (
-                    hasattr(action, "function_calls") and action.function_calls  # type: ignore[union-attr]
-                ):
-                    for fc in action.function_calls:  # type: ignore[union-attr]
+                func_calls = getattr(action, "function_calls", None)
+                if func_calls:
+                    for fc in func_calls:
                         tool_calls.append(fc.name)
 
         if event.is_final_response() and event.content:
