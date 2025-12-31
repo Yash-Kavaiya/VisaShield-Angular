@@ -4,14 +4,14 @@
 import asyncio
 import json
 import uuid
+from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import AsyncGenerator, Optional
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 from google.adk.runners import InMemoryRunner
 from google.genai import types
+from pydantic import BaseModel
 
 from app.adjudicator_agent import adjudicator_agent
 
@@ -25,37 +25,38 @@ runner = InMemoryRunner(agent=adjudicator_agent, app_name="adjudicator")
 # REQUEST/RESPONSE MODELS
 # ========================================
 
+
 class CaseInfo(BaseModel):
     case_number: str
     visa_type: str
     petitioner_name: str
     beneficiary_name: str
-    job_title: Optional[str] = None
-    job_duties: Optional[str] = None
-    degree_type: Optional[str] = None
-    degree_field: Optional[str] = None
-    years_experience: Optional[int] = None
-    work_location: Optional[str] = None
-    offered_wage: Optional[float] = None
-    prevailing_wage: Optional[float] = None
-    lca_number: Optional[str] = None
+    job_title: str | None = None
+    job_duties: str | None = None
+    degree_type: str | None = None
+    degree_field: str | None = None
+    years_experience: int | None = None
+    work_location: str | None = None
+    offered_wage: float | None = None
+    prevailing_wage: float | None = None
+    lca_number: str | None = None
 
 
 class AdjudicationRequest(BaseModel):
     case_info: CaseInfo
-    user_id: Optional[str] = None
-    session_id: Optional[str] = None
+    user_id: str | None = None
+    session_id: str | None = None
 
 
 class AdjudicationEvent(BaseModel):
     event_type: str  # 'stage', 'reasoning', 'tool_call', 'result', 'error', 'complete'
-    stage: Optional[str] = None
-    content: Optional[str] = None
-    tool_name: Optional[str] = None
-    tool_result: Optional[dict] = None
-    confidence: Optional[int] = None
+    stage: str | None = None
+    content: str | None = None
+    tool_name: str | None = None
+    tool_result: dict | None = None
+    confidence: int | None = None
     timestamp: str = ""
-    
+
     def __init__(self, **data):
         if "timestamp" not in data or not data["timestamp"]:
             data["timestamp"] = datetime.now().isoformat()
@@ -66,15 +67,16 @@ class AdjudicationEvent(BaseModel):
 # STREAMING ADJUDICATION ENDPOINT
 # ========================================
 
+
 @router.post("/analyze/stream")
 async def analyze_case_stream(request: AdjudicationRequest):
     """Stream the adjudication analysis in real-time."""
-    
+
     async def generate_events() -> AsyncGenerator[str, None]:
         user_id = request.user_id or f"user_{uuid.uuid4().hex[:8]}"
         session_id = request.session_id or f"session_{uuid.uuid4().hex[:8]}"
         case = request.case_info
-        
+
         # Build the analysis prompt
         prompt = f"""Analyze the following immigration petition case:
 
@@ -103,7 +105,7 @@ Provide detailed reasoning for each step."""
 
         # Send initial stage event
         yield f"data: {AdjudicationEvent(event_type='stage', stage='form_validation', content='Starting petition form analysis...').model_dump_json()}\n\n"
-        
+
         try:
             # Run the agent and stream events
             async for event in runner.run_async(
@@ -121,7 +123,7 @@ Provide detailed reasoning for each step."""
                             for fc in action.function_calls:
                                 # Tool call event
                                 yield f"data: {AdjudicationEvent(event_type='tool_call', tool_name=fc.name, content=f'Executing: {fc.name}').model_dump_json()}\n\n"
-                
+
                 if hasattr(event, 'responses') and event.responses:
                     for response in event.responses:
                         if hasattr(response, 'function_responses') and response.function_responses:
@@ -129,7 +131,7 @@ Provide detailed reasoning for each step."""
                                 # Tool result event
                                 result_data = fr.response if hasattr(fr, 'response') else {}
                                 yield f"data: {AdjudicationEvent(event_type='tool_result', tool_name=fr.name if hasattr(fr, 'name') else 'unknown', tool_result=result_data).model_dump_json()}\n\n"
-                
+
                 # Check for final response
                 if event.is_final_response() and event.content:
                     for part in event.content.parts:
@@ -140,13 +142,13 @@ Provide detailed reasoning for each step."""
                             for chunk in chunks:
                                 yield f"data: {AdjudicationEvent(event_type='reasoning', content=chunk).model_dump_json()}\n\n"
                                 await asyncio.sleep(0.05)  # Small delay for streaming effect
-            
+
             # Send completion event
             yield f"data: {AdjudicationEvent(event_type='complete', content='Analysis complete', confidence=89).model_dump_json()}\n\n"
-            
+
         except Exception as e:
             yield f"data: {AdjudicationEvent(event_type='error', content=str(e)).model_dump_json()}\n\n"
-    
+
     return StreamingResponse(
         generate_events(),
         media_type="text/event-stream",
@@ -162,19 +164,20 @@ Provide detailed reasoning for each step."""
 # WEBSOCKET ENDPOINT FOR REAL-TIME
 # ========================================
 
+
 @router.websocket("/ws/{user_id}/{session_id}")
 async def websocket_adjudication(websocket: WebSocket, user_id: str, session_id: str):
     """WebSocket endpoint for real-time bidirectional adjudication."""
     await websocket.accept()
-    
+
     try:
         while True:
             # Receive case data from client
             data = await websocket.receive_text()
             request_data = json.loads(data)
-            
+
             case = CaseInfo(**request_data.get("case_info", {}))
-            
+
             # Build prompt
             prompt = f"""Analyze immigration case {case.case_number} for {case.visa_type} classification.
 Petitioner: {case.petitioner_name}
@@ -188,7 +191,7 @@ Perform complete adjudication analysis with all required tools."""
                 "content": "Analyzing petition form...",
                 "timestamp": datetime.now().isoformat()
             })
-            
+
             # Run agent
             async for event in runner.run_async(
                 user_id=user_id,
@@ -209,7 +212,7 @@ Perform complete adjudication analysis with all required tools."""
                                     "content": f"Executing {fc.name}",
                                     "timestamp": datetime.now().isoformat()
                                 })
-                
+
                 # Send final response
                 if event.is_final_response() and event.content:
                     for part in event.content.parts:
@@ -219,7 +222,7 @@ Perform complete adjudication analysis with all required tools."""
                                 "content": part.text,
                                 "timestamp": datetime.now().isoformat()
                             })
-            
+
             # Send completion
             await websocket.send_json({
                 "event_type": "complete",
@@ -227,7 +230,7 @@ Perform complete adjudication analysis with all required tools."""
                 "confidence": 89,
                 "timestamp": datetime.now().isoformat()
             })
-            
+
     except WebSocketDisconnect:
         pass
     except Exception as e:
@@ -242,20 +245,21 @@ Perform complete adjudication analysis with all required tools."""
 # SYNCHRONOUS ANALYSIS ENDPOINT
 # ========================================
 
+
 @router.post("/analyze")
 async def analyze_case(request: AdjudicationRequest) -> dict:
     """Perform complete case analysis (non-streaming)."""
     user_id = request.user_id or f"user_{uuid.uuid4().hex[:8]}"
     session_id = request.session_id or f"session_{uuid.uuid4().hex[:8]}"
     case = request.case_info
-    
+
     prompt = f"""Analyze immigration case {case.case_number} for {case.visa_type}.
 Petitioner: {case.petitioner_name}, Beneficiary: {case.beneficiary_name}
 Perform complete adjudication with all tools and provide final recommendation."""
 
     result_text = ""
     tool_calls = []
-    
+
     async for event in runner.run_async(
         user_id=user_id,
         session_id=session_id,
@@ -269,12 +273,12 @@ Perform complete adjudication with all tools and provide final recommendation.""
                 if hasattr(action, 'function_calls') and action.function_calls:
                     for fc in action.function_calls:
                         tool_calls.append(fc.name)
-        
+
         if event.is_final_response() and event.content:
             for part in event.content.parts:
                 if hasattr(part, 'text') and part.text:
                     result_text += part.text
-    
+
     return {
         "case_number": case.case_number,
         "visa_type": case.visa_type,
@@ -287,6 +291,7 @@ Perform complete adjudication with all tools and provide final recommendation.""
 # ========================================
 # UTILITY ENDPOINTS
 # ========================================
+
 
 @router.get("/criteria/{visa_type}")
 async def get_evaluation_criteria(visa_type: str) -> dict:
@@ -311,10 +316,10 @@ async def get_evaluation_criteria(visa_type: str) -> dict:
             {"id": "3", "name": "Substantial Merit", "description": "Proposed endeavor has substantial merit and national importance"}
         ]
     }
-    
+
     if visa_type.upper() not in criteria_map:
         raise HTTPException(status_code=404, detail=f"Criteria not found for visa type: {visa_type}")
-    
+
     return {
         "visa_type": visa_type.upper(),
         "criteria": criteria_map.get(visa_type.upper(), [])

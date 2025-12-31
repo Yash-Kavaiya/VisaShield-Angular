@@ -1,16 +1,17 @@
 # Copyright 2025 VisaShield AI
 # Immigration Adjudication Agent with specialized tools
 
-import json
 import random
 from datetime import datetime
 from typing import Any
+
 from google.adk.agents import Agent
 from google.adk.apps.app import App
 
 # ========================================
 # VISA ADJUDICATION TOOLS
 # ========================================
+
 
 def analyze_petition_form(
     case_number: str,
@@ -19,13 +20,13 @@ def analyze_petition_form(
     beneficiary_name: str
 ) -> dict[str, Any]:
     """Analyzes an immigration petition form for completeness and validity.
-    
+
     Args:
         case_number: The unique case identifier (e.g., H1B-2024-00847)
         form_type: The form type (I-129, I-140, I-485, etc.)
         petitioner_name: Name of the petitioning employer/sponsor
         beneficiary_name: Name of the visa beneficiary
-    
+
     Returns:
         dict: Analysis results with validation status and findings
     """
@@ -53,13 +54,13 @@ def evaluate_specialty_occupation(
     soc_code: str
 ) -> dict[str, Any]:
     """Evaluates whether a position qualifies as a specialty occupation under H-1B criteria.
-    
+
     Args:
         job_title: The offered position title
         job_duties: Description of job responsibilities
         degree_requirement: Required educational qualification
         soc_code: Standard Occupational Classification code
-    
+
     Returns:
         dict: Evaluation results with specialty occupation determination
     """
@@ -103,13 +104,13 @@ def check_beneficiary_qualifications(
     certifications: list[str]
 ) -> dict[str, Any]:
     """Verifies beneficiary meets qualification requirements for the visa category.
-    
+
     Args:
         degree_type: Type of degree (Bachelor's, Master's, PhD)
         degree_field: Field of study
         years_experience: Years of relevant work experience
         certifications: List of professional certifications
-    
+
     Returns:
         dict: Qualification verification results
     """
@@ -144,13 +145,13 @@ def verify_employer_employee_relationship(
     right_to_control: str
 ) -> dict[str, Any]:
     """Analyzes the employer-employee relationship for visa compliance.
-    
+
     Args:
         employer_name: Name of the petitioning employer
         work_location: Primary work location
         supervision_details: Description of supervisory structure
         right_to_control: Evidence of employer's right to control work
-    
+
     Returns:
         dict: Employer-employee relationship analysis
     """
@@ -191,18 +192,18 @@ def check_lca_compliance(
     offered_wage: float
 ) -> dict[str, Any]:
     """Verifies Labor Condition Application compliance.
-    
+
     Args:
         lca_number: DOL Labor Condition Application case number
         wage_level: Wage level (1-4)
         prevailing_wage: DOL prevailing wage for the occupation
         offered_wage: Wage offered to the beneficiary
-    
+
     Returns:
         dict: LCA compliance verification results
     """
     wage_compliant = offered_wage >= prevailing_wage
-    
+
     lca_result = {
         "lca_number": lca_number,
         "wage_analysis": {
@@ -232,14 +233,14 @@ def generate_adjudication_draft(
     risk_factors: list[str]
 ) -> dict[str, Any]:
     """Generates a draft adjudication decision with citations.
-    
+
     Args:
         case_number: The case identifier
         visa_type: Type of visa being adjudicated
         recommendation: APPROVE, DENY, or RFE
         key_findings: List of key positive findings
         risk_factors: List of identified risk factors
-    
+
     Returns:
         dict: Draft adjudication decision
     """
@@ -270,10 +271,10 @@ def generate_adjudication_draft(
 
 def check_citation_validity(citation: str) -> dict[str, Any]:
     """Validates a legal citation against known databases.
-    
+
     Args:
         citation: The legal citation to verify
-    
+
     Returns:
         dict: Citation validation result
     """
@@ -285,9 +286,9 @@ def check_citation_validity(citation: str) -> dict[str, Any]:
         "Matter of Defensor": True,
         "Kazarian v. USCIS": True,
     }
-    
+
     is_valid = any(known in citation for known in known_citations.keys())
-    
+
     return {
         "citation": citation,
         "valid": is_valid,

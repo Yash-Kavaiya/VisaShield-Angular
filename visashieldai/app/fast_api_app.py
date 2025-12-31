@@ -19,9 +19,9 @@ from fastapi import FastAPI
 from google.adk.cli.fast_api import get_fast_api_app
 from google.cloud import logging as google_cloud_logging
 
+from app.adjudicator_api import router as adjudicator_router
 from app.app_utils.telemetry import setup_telemetry
 from app.app_utils.typing import Feedback
-from app.adjudicator_api import router as adjudicator_router
 
 setup_telemetry()
 _, project_id = google.auth.default()
